@@ -1,0 +1,1303 @@
+
+<!-- 
+	============================================================================
+	PROJECT:    Simulatore Quiz Patentino Fitosanitario
+	VERSION:    1.2
+	AUTHOR:     Luciano
+	COLLAB:     Sviluppato in collaborazione con Google Gemini AI
+	RESOURCES:  Quesiti ufficiali Regione Emilia-Romagna (Guida 2016 rev.01/18)
+	LICENSE:    Strettamente didattico e senza scopo di lucro
+	BUILD DATE: Maggio 2026
+	NOTES:      Struttura ottimizzata per mobile, mappatura moduli e 
+				navigazione rapida per 194 domande.
+	============================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<meta name="robots" content="noindex, nofollow">
+
+	<title>Quiz Patentino</title>
+	<style>
+		:root {
+			--primary: #2c3e50;
+			--correct: #27ae60;
+			--wrong: #c0392b;
+			--exam-blue: #2980b9;
+			--accent: #f1c40f;
+			--bg: #f4f7f6;
+		}
+
+		body {
+			font-family: 'Segoe UI', system-ui, sans-serif;
+			margin: 0;
+			background: var(--bg);
+			display: flex;
+			flex-direction: column;
+			min-height: 100vh;
+
+			font-size: 16px;
+			overflow-x: hidden; /* Evita solo lo scroll orizzontale fastidioso */
+		}
+
+		/* HEADER PIÙ ALTO E SPAZIOSO */
+		header { 
+			background: #fff; border-bottom: 1px solid #ddd; 
+			position: fixed; top: 0; width: 100%; z-index: 1000;
+			box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+			height: 110px; 
+		}
+		.header-content { 
+			max-width: 1200px; margin: 0 auto; height: 100%;
+			display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+		}
+
+		.h-left { display: flex; gap: 10px; flex: 1; }
+		
+		.h-center { flex: 1; display: flex; justify-content: center; }
+		#timer-box { font-family: 'Courier New', Courier, monospace; font-size: 2em; color: #c0392b; font-weight: bold; background: #fff1f0; padding: 5px 20px; border-radius: 10px; border: 1px solid #ffccc7; }
+
+		.h-right { flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+		.mode-title { font-weight: 800; color: var(--primary); font-size: 1.1em; text-transform: uppercase; }
+		
+		.stats-row { display: flex; gap: 8px; }
+		.badge { padding: 5px 12px; border-radius: 6px; color: white; font-weight: bold; font-size: 0.9em; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+		.bg-correct { background: var(--correct); }
+		.bg-wrong { background: var(--wrong); }
+		.bg-neutral { background: #7f8c8d; }
+
+		.progress-container { position: fixed; top: 110px; width: 100%; height: 8px; background: #eee; z-index: 999; }
+		#progress-bar { height: 100%; width: 0%; background: #95a5a6; transition: all 0.5s ease; }
+
+		#home-screen {
+			flex-grow: 1;
+			display: flex;
+			flex-direction: column; /* Cambiato a column per far stare il footer sotto */
+			align-items: center;
+			justify-content: center;
+			padding: 10px 20px; 
+			min-height: auto; 
+			box-sizing: border-box;
+			margin-top: 40px;
+		}
+		.menu-card {
+			background: white;
+			padding: 20px; /* Ridotto da 50 a 30 */
+			border-radius: 25px;
+			box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+			text-align: center;
+			width: 100%;
+			max-width: 480px;
+		}
+
+		.menu-card h1 {
+			color: var(--primary);
+			margin-bottom: 15px; /* Ridotto da 40 a 15 */
+			font-size: 2em;
+		}
+		.btn-main, .btn-exam {
+			width: 100%;
+			padding: 16px; /* Leggermente più basso */
+			color: white;
+			border: none;
+			border-radius: 12px;
+			margin-bottom: 15px;
+			cursor: pointer;
+			font-weight: bold;
+			font-size: 1.1em;
+		}
+
+		.btn-main { background: var(--primary); }
+		.btn-exam { background: #8e44ad; margin-bottom: 0; }
+		.rand-box {
+			background: #f1f4f9;
+			padding: 15px 20px; /* Compattato */
+			border-radius: 15px;
+			margin-bottom: 15px;
+			border: 1px solid #dce4f0;
+		}
+
+		.rand-box p { margin: 0 0 10px 0; font-weight: bold; color: #444; }
+
+		.rand-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
+
+		#rand-num {
+			width: 65px;
+			padding: 10px;
+			text-align: center;
+			border-radius: 10px;
+			border: 2px solid #ccc;
+			font-size: 1.1em;
+			font-weight: bold;
+		}
+
+		.btn-rand {
+			padding: 10px 20px;
+			background: var(--primary);
+			color: white;
+			border: none;
+			border-radius: 10px;
+			cursor: pointer;
+			font-weight: bold;
+		}
+		
+		/* DOMANDE PIÙ GRANDI */
+		#quiz-container { max-width: 850px; margin: 150px auto 80px; padding: 0 20px; }
+		.question-box { background: white; padding: 30px; margin-bottom: 30px; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border-left: 6px solid transparent; }
+		.question-box.fade { opacity: 0.6; pointer-events: none; }
+		.question-box.fade .hint-btn { pointer-events: auto; }
+		
+		.q-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+		.q-text { font-weight: 700; font-size: 1.2em; color: var(--primary); line-height: 1.5; flex: 1; }
+		.hint-btn { background: #e8f4fd; color: var(--exam-blue); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-weight: bold; font-size: 1.2em; border: 1px solid #d6eaf8; margin-left: 15px; }
+
+		.options { display: flex; flex-direction: column; gap: 12px; }
+		.option-btn { padding: 16px; border: 1px solid #dee2e6; border-radius: 12px; background: #fff; text-align: left; cursor: pointer; transition: 0.2s; font-size: 1.1em; }
+		.option-btn:hover { background: #f8f9fa; border-color: var(--exam-blue); }
+		
+		.correct { background: var(--correct) !important; color: white; border-color: var(--correct); }
+		.wrong { background: var(--wrong) !important; color: white; border-color: var(--wrong); }
+		.selected-exam { background: var(--exam-blue) !important; color: white; border-color: var(--exam-blue); }
+
+		.glow { 
+			animation: glowing 1.5s infinite; 
+			border: 1px solid var(--accent) !important; /* Opzionale: colora solo il bordo */
+		}
+
+		@keyframes glowing { 
+			0% { box-shadow: 0 0 5px var(--accent); } 
+			50% { box-shadow: 0 0 25px var(--accent); } 
+			100% { box-shadow: 0 0 5px var(--accent); } 
+		}
+		
+		.missing-answer {
+			animation: flash-red 1s infinite alternate;
+			border: 2px solid var(--wrong) !important;
+		}
+
+		@keyframes flash-red {
+			from { background-color: white; }
+			to { background-color: #ffe6e6; }
+		}
+
+		footer { 
+			background: #fff; 
+			width: 100%; 
+			padding: 15px 10px;
+			display: block;
+			text-align: center; 
+			font-size: 0.85rem; 
+			color: #666;
+			box-shadow: 0 -3px 12px rgba(0,0,0,0.08); 
+			border-top: 1px solid #ddd; 
+			margin-top: 0;
+			box-sizing: border-box;
+		}
+		
+		footer a, footer a:visited { 
+			color: #1a73e8 !important; 
+			text-decoration: none !important; 
+			font-weight: bold; 
+		}
+
+		footer a:hover { 
+			text-decoration: underline !important;
+			color: #1557b0 !important;
+		}
+
+		footer p {
+			max-width: 800px;
+			margin: 10px auto;
+			line-height: 1.6;
+		}
+
+		footer hr {
+			border: 0; 
+			border-top: 1px solid #eee; 
+			margin: 0 auto 10px auto; /* 15px o 10px per avvicinare il testo alla linea */
+			max-width: 800px;
+		}
+
+		#submit-container { 
+			position: fixed;
+			bottom: 55px; /* Sopra il footer */
+			right: 20px;  /* Angolo a destra */
+			width: auto;
+			pointer-events: none;
+			z-index: 1002;
+		}
+
+		#submit-exam {
+			pointer-events: auto;
+			background: #e67e22;
+			color: white;
+			width: 60px;
+			height: 60px;
+			border-radius: 50%; /* Rende il tasto un cerchio */
+			
+			/* IL BORDO SUL PERIMETRO DEL CERCHIO */
+			border: 3px solid white; 
+			box-sizing: border-box; /* Mantiene il bordo dentro i 60px senza sballare le misure */
+			
+			cursor: pointer;
+			font-size: 2.5rem;
+			transform: rotate(-25deg);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding-left: 5px;
+			line-height: 1;
+			
+			/* Ombra che fa risaltare il cerchio col suo bordo */
+			box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+			transition: transform 0.2s, background 0.2s;
+		}
+
+		#submit-exam:active {
+			transform: rotate(-25deg) scale(0.9);
+		}
+
+		#submit-exam:hover {
+			transform: rotate(-25deg) scale(1.1);
+			background: #d35400; /* Diventa un po' più scuro quando ci passi sopra */
+		}
+		.hidden { display: none !important; }
+
+		.row-modulo, .row-unita {
+			display: flex; /* Trasforma la riga in un contenitore flessibile */
+			align-items: flex-start;
+			padding: 8px 15px;
+			color: #9f3e0a;
+			line-height: 1.3;
+			font-weight: bold;
+			font-size: 0.85rem;
+		}
+
+		.label-box {
+			min-width: 85px;
+			text-transform: uppercase;
+			flex-shrink: 0;
+			margin-right: 2px;
+		}
+
+		.desc-box {
+			flex: 1;
+		}
+
+		.info-pagine-box {
+			padding: 12px 15px;
+			color: #444;
+			font-size: 0.95rem;
+		}
+
+		.hint-text {
+			background: #e8f4fd; 
+			border-radius: 12px; 
+			margin-top: 15px;
+			padding: 0 !important; 
+			border-left: 6px solid #1a73e8; 
+			box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+			animation: fadeIn 0.3s ease;
+			overflow: hidden;
+		}
+
+		@media (max-width: 600px) {
+			header { height: 140px; }
+			.header-content { flex-wrap: wrap; padding: 10px; }
+			.h-left { order: 1; } .h-right { order: 2; }
+			.h-center { order: 3; flex-basis: 100%; margin-top: 10px; }
+			.progress-container { top: 140px; }
+			#quiz-container { margin-top: 180px; margin-bottom: 100px; }
+			.menu-card {
+				margin-bottom: 30px; /* Quel tanto che basta per dare respiro su mobile */
+			}
+
+			footer { padding: 20px 10px; font-size: 0.75rem; }
+
+			#submit-container {
+				bottom: 42px; /* Più basso per non coprire troppo le domande su schermi piccoli */
+				right: 15px;  /* Più vicino al bordo del telefono */
+				left: auto;
+			}
+			#submit-exam {
+				width: 55px;  
+				height: 55px;
+				font-size: 2rem;
+				border: 2px solid white; /* Bordo un pelo più sottile per il cerchio da 55px */
+			}
+			#submit-exam:hover {
+				background: #e67e22; /* Torna al colore originale invece di restare scuro */
+				transform: rotate(-25deg) scale(1); 
+			}
+			#submit-exam:active {
+				transform: rotate(-25deg) scale(0.9);
+			}
+			.h-left { 
+				gap: 5px; /* Riduce lo spazio tra i tasti per farceli stare tutti e tre */
+			}
+			.h-left .btn {
+				padding: 8px 10px; /* Li rimpicciolisce un pelo solo su telefono */
+				font-size: 0.9em;
+			}
+		}
+
+		/* Barra laterale per lo scroll veloce */
+		#scroll-index {
+			position: fixed;
+			right: 12px;
+			top: 55%;
+			transform: translateY(-50%);
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			z-index: 2000;
+			pointer-events: none; /* Non disturba finché non clicchi sui singoli pallini */
+		}
+
+		.index-dot {
+			pointer-events: auto;
+			width: 32px;
+			height: 32px;
+			background: rgba(44, 62, 80, 0.4); /* Grigio scuro trasparente */
+			color: white;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 0.7rem;
+			font-weight: bold;
+			cursor: pointer;
+			backdrop-filter: blur(4px);
+			transition: all 0.2s ease;
+			border: 1px solid rgba(255,255,255,0.2);
+		}
+
+		.index-dot:hover {
+			background: var(--primary);
+			transform: scale(1.1);
+			box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+		}
+
+		/* Nasconde l'indice di default */
+		.hidden-index { 
+			display: none !important; 
+		}
+		
+		/* Fix double-click */
+		.index-dot, #submit-exam {
+			-webkit-user-select: none; /* Safari */
+			-ms-user-select: none;     /* IE 10+ */
+			user-select: none;         /* Standard */
+			-webkit-tap-highlight-color: transparent; /* Toglie il lampo blu al tocco su Android/iOS */
+		}
+
+		/* --- DARK MODE COMPLETA E OTTIMIZZATA --- */
+		body.dark-mode {
+			--bg: #121212;
+			--primary: #ffffff;
+			--exam-blue: #3498db;
+			background-color: var(--bg);
+			color: #e0e0e0;
+		}
+
+		/* Header, Footer e Contenitori Principali */
+		body.dark-mode header, 
+		body.dark-mode footer, 
+		body.dark-mode .menu-card, 
+		body.dark-mode .question-box,
+		body.dark-mode .hint-text {
+			background-color: #1e1e1e !important;
+			color: #ffffff !important;
+			border-color: #333 !important;
+		}
+
+		/* Testi della Home (Titoli e Sottotitoli) */
+		body.dark-mode .menu-card h1, 
+		body.dark-mode .menu-card h3, 
+		body.dark-mode .rand-box p {
+			color: #ffffff !important;
+		}
+		
+		body.dark-mode footer hr {
+			border-top: 1px solid #444;
+		}
+
+		/* Box Casuali e Input */
+		body.dark-mode .rand-box {
+			background-color: #252525 !important;
+			border-color: #444 !important;
+		}
+
+		body.dark-mode #rand-num {
+			background-color: #121212 !important;
+			color: #ffffff !important;
+			border-color: #555 !important;
+		}
+
+		/* Bottoni delle Opzioni */
+		body.dark-mode .option-btn {
+			background-color: #2c2c2c;
+			color: #ffffff;
+			border-color: #444;
+		}
+
+		body.dark-mode .option-btn:hover {
+			background-color: #3d3d3d;
+			border-color: var(--exam-blue);
+		}
+
+		body.dark-mode .btn-main, 
+		body.dark-mode .btn-rand {
+			color: #ffffff !important;
+		}
+
+		body.dark-mode .btn-main:not([style*="background"]), 
+		body.dark-mode .btn-rand:not([style*="background"]) {
+			background-color: #2c3e50 !important;
+			border: 1px solid #444;
+		}
+
+		/* Fix per i suggerimenti (info pagine) */
+		body.dark-mode .info-pagine-box {
+			color: #bbb !important;
+		}
+
+		/* FIX GLOW ROSSO (Domande dimenticate in esame) */
+		/* Usiamo un'ombra esterna pulsante così il testo dentro rimane leggibile */
+		body.dark-mode .missing-answer {
+			background-color: #2c1a1a !important; 
+			border: 2px solid #ff4d4d !important;
+			animation: flash-red-dark 1s infinite alternate;
+		}
+
+		@keyframes flash-red-dark {
+			from { box-shadow: 0 0 5px #ff4d4d; }
+			to { box-shadow: 0 0 20px #ff4d4d; }
+		}
+
+		/* Badge statistiche in Dark Mode */
+		body.dark-mode .badge.bg-neutral {
+			background-color: #444;
+		}
+
+		/* Timer in Dark Mode */
+		body.dark-mode #timer-box {
+			background-color: #2c1a1a;
+			color: #ff4d4d;
+			border-color: #600;
+		}
+
+	</style>
+</head>
+<body>
+
+	<header id="quiz-header" class="hidden">
+		<div class="header-content">
+			
+			<div class="h-left">
+				<button class="btn" style="padding:10px 15px; cursor:pointer; font-weight:bold; border-radius:8px;" onclick="goHome()">🏠 Home</button>
+				<button id="restart-btn" class="btn" style="padding:10px 15px; cursor:pointer; font-weight:bold; border-radius:8px;" onclick="restartQuiz()">🔄 Rinizia</button>
+				<!-- NUOVO TASTO DARK MODE -->
+				<button id="theme-toggle" class="btn" style="padding:10px 15px; cursor:pointer; font-size:1.2em; border-radius:8px;" onclick="toggleDarkMode()">🌓</button>
+			</div>
+			
+			<div class="h-center">
+				<div id="timer-box" class="hidden">00:00</div>
+			</div>
+
+			<div class="h-right">
+				<div class="mode-title" id="mode-title">MODALITÀ</div>
+				<div class="stats-row">
+					<div id="badge-e" class="badge bg-correct">Esatte: 0</div>
+					<div id="badge-s" class="badge bg-wrong">Sbagliate: 0</div>
+					<div id="badge-r" class="badge bg-neutral">Risposte: 0/0</div>
+				</div>
+			</div>
+		</div>
+	</header>
+	
+	<div class="progress-container hidden" id="prog-cont">
+		<div id="progress-bar"></div>
+	</div>
+
+	<!-- HOME SCREEN RIPRISTINATA -->
+
+	<div id="home-screen">
+		<div class="menu-card">
+			
+			<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+				<h1 style="margin: 0; font-size: 1.8em;">🚜 Quiz Patentino</h1>
+				<div style="display: flex; gap: 8px;">
+					<button id="btn-errori" class="btn" style="padding: 8px 12px; cursor:pointer; font-size:1.1em; border-radius:8px; position:relative;" onclick="startQuiz('errors')" title="Ripassa Errori">
+						🚩 <span id="error-count" style="font-size: 0.6em; position: absolute; top: -5px; right: -5px; background: var(--wrong); color: white; border-radius: 50%; padding: 2px 6px; display: none; font-family: sans-serif;">0</span>
+					</button>
+					<button class="btn" style="padding: 8px 12px; cursor:pointer; font-size:1.1em; border-radius:8px;" onclick="toggleDarkMode()">🌓</button>
+				</div>
+			</div>
+
+			<h3>Il corretto impiego dei prodotti fitosanitari.<br>Edizione 2016 rev. 01/18<h3>
+			
+			<button class="btn-main" onclick="startQuiz('all')">📖 Tutte le domande (194)</button>
+			<div style="display: flex; gap: 8px; margin: 12px 0;">
+				<button class="btn-main" style="background: #e67e22; flex: 1; padding: 10px; font-size: 0.8em; margin-bottom:0;" onclick="startQuiz('mod1')">MOD 1</button>
+				<button class="btn-main" style="background: #27ae60; flex: 1; padding: 10px; font-size: 0.8em; margin-bottom:0;" onclick="startQuiz('mod2')">MOD 2</button>
+				<button class="btn-main" style="background: #2980b9; flex: 1; padding: 10px; font-size: 0.8em; margin-bottom:0;" onclick="startQuiz('mod3')">MOD 3</button>
+			</div>
+			
+			<div class="rand-box">
+				<p>Quante domande casuali vuoi?</p>
+				<div class="rand-controls">
+					<input type="number" id="rand-num" value="20" min="1" max="194">
+					<button class="btn-rand" onclick="startQuiz('rand')">🎲 Inizia Casuali</button>
+				</div>
+			</div>
+			
+			<button class="btn-exam" onclick="startQuiz('exam')">⏱️ Modalità Esame</button>
+		</div>
+	</div>
+
+	<div id="quiz-container"></div>
+
+	<div id="submit-container">
+		<button id="submit-exam" class="hidden" title="Consegna Esame" onclick="consegnaEsame()">➢</button>
+	</div>
+
+	<footer>
+		<hr>
+		<p>
+			<strong>Nota Informativa:</strong> Questo applicativo è uno strumento di supporto allo studio non ufficiale.<br>
+			I quesiti e i materiali didattici sono tratti dalla 
+			<a href="https://agricoltura.regione.emilia-romagna.it/fitosanitario/difesa-sostenibile/uso-sostenibile/patentino/guida-patentino-2016" target="_blank">Guida al Patentino 2016</a> 
+			della <strong>Regione Emilia-Romagna</strong>.<br>
+			Le domande 24, 66, 67, 69 e 101 sono state aggiornate in conformità alla rev. 01/18 del manuale.
+		</p>
+
+		<p>
+			Contenuti riutilizzati in conformità alla licenza 
+			<a href="https://creativecommons.org" target="_blank">CC-BY 4.0</a>.
+		</p>
+
+		<p style="font-style: italic; margin-top: 15px;">
+			L'uso di questo file è strettamente didattico e senza scopo di lucro.
+		</p>
+	</footer>
+	<div id="scroll-index" class="hidden-index">
+		<div class="index-dot" onclick="jumpTo(1)" title="Intro">1</div>
+		<div class="index-dot" onclick="jumpTo(25)" title="Unità 1">25</div>
+		<div class="index-dot" onclick="jumpTo(50)" title="Unità 2">50</div>
+		<div class="index-dot" onclick="jumpTo(100)" title="Metà">100</div>
+		<div class="index-dot" onclick="jumpTo(150)" title="Quasi fine">150</div>
+		<div class="index-dot" onclick="jumpTo(194)" title="Fine">194</div>
+	</div>
+
+	<script>
+		const savedTheme = localStorage.getItem('theme'); // Salvo il valore
+		if (savedTheme === 'dark') { // Lo controllo
+			document.body.classList.add('dark-mode');
+		}
+		aggiornaContatoreErrori();
+
+		// --- CONFIGURAZIONE ---
+		const MIN_PROMOSSO = 17;
+		const MINUTI_ESAME = 30;
+		const DOMANDE_ESAME = 20;
+
+		const allQuestions = [
+			{ q: "1. Chi può richiedere il patentino?", a: ["Tutti i lavoratori agricoli", "Gli utilizzatori professionali e in generale tutti i cittadini maggiorenni", "Solo chi effettua i trattamenti antiparassitari"], correct: 1 },
+			{ q: "2. Ogni quanti anni deve essere rinnovata l’autorizzazione all’acquisto e all’impiego dei prodotti fitosanitari?", a: ["10 Anni", "5 Anni", "3 Anni"], correct: 1 },
+			{ q: "3. A cosa serve il patentino?", a: ["Per acquistare ed utilizzare tutti i prodotti fitosanitari destinati ad un uso professionale", "Per guidare trattrici dotate di cabine pressurizzate", "Per acquistare prodotti fitosanitari etichettati con il simbolo di pericolo t+ e l’indicazione di pericolo molto tossico"], correct: 0 },
+			{ q: "4. È necessario frequentare un corso di formazione per il rinnovo del patentino?", a: ["Sì", "No mai", "Sì, ma solo se si è smarrito il documento"], correct: 0 },
+			{ q: "5. Quali tipi di norme riguardano l’acquisto e l’uso dei prodotti fitosanitari?", a: ["Normative nazionali", "Normative comunitarie", "Normative comunitarie e nazionali"], correct: 2 },
+			{ q: "6. Che cosa sono i prodotti fitosanitari?", a: ["Sono le sostanze attive ed i preparati, contenenti una o più sostanze attive, destinati ad essere utilizzati per il controllo degli organismi nocivi delle colture, per il controllo delle piante infestanti nelle coltivazioni e per favorire o regolare le produzioni vegetali", "Sono esclusivamente gli insetticidi e fungicidi utilizzati per la difesa delle piante e delle derrate alimentari", "Sono tutti i prodotti che vengono utilizzati per la difesa della piante agrarie ed ornamentali, che vengono classificati come molto tossici, tossici e nocivi"], correct: 0 },
+			{ q: "7. È possibile impiegare prodotti fitosanitari per scopi diversi da quelli indicati in etichetta?", a: ["No, i prodotti fitosanitari vanno usati esclusivamente per gli usi riportati in etichetta", "Sì, solamente su consiglio del venditore o del tecnico che fornisce l’assistenza", "Sì, solo se realmente necessario"], correct: 0 },
+			{ q: "8. Con gli insetticidi di impiego agricolo possono essere trattati i parassiti degli animali?", a: ["Sì, solamente se questi non producono latte", "No, mai", "Sì, solo su ricetta del veterinario"], correct: 1 },
+			{ q: "9. Che cosa si intende per sostanza attiva?", a: ["Un prodotto che può essere acquistato solamente da chi possiede il patentino", "È la parte del formulato commerciale che serve per migliorare le prestazioni del prodotto", "È la sostanza che possiede un’attività nei confronti degli organismi nocivi o dell’avversità da combattere"], correct: 2 },
+			{ q: "10. Perché è importante conoscere l'attività della sostanza attiva?", a: ["Perché specifica se il prodotto è nocivo agli insetti ed acari utili", "Perché indirizza l'agricoltore nella scelta del prodotto in relazione all’avversità da combattere", "Perché indica la quantità minima necessaria per combattere i parassiti"], correct: 1 },
+			{ q: "11. Che cosa sono i coadiuvanti?", a: ["Sostanze che aumentano l’efficacia delle sostanze attive e ne favoriscono la distribuzione", "Sostanze che riducono l'efficacia di un prodotto fitosanitario", "Sostanze che riducono il tempo di sicurezza"], correct: 0 },
+			{ q: "12. Che cosa sono i coformulanti?", a: ["Sostanze che hanno lo scopo di aumentare l’efficacia delle sostanze attive", "Sostanze che servono a ridurre la DL 50", "Sostanze che servono a ridurre la concentrazione della sostanza attiva"], correct: 2 },
+			{ q: "13. Cosa sono i bagnanti-adesivanti?", a: ["Prodotti che prevengono le fisiopatie", "Coadiuvanti di prodotti fitosanitari che favoriscono una maggior copertura della superficie irrorata e aumentano la resistenza al dilavamento", "Coadiuvanti antischiuma degli erbicidi di post-emergenza"], correct: 1 },
+			{ q: "14. I corroboranti sono:", a: ["Sostanze di origine naturale, diverse dai fertilizzanti, che migliorano la resistenza delle piante nei confronti degli organismi nocivi e le proteggono da danni non provocati da parassiti", "Sostanze che sostituiscono i coformulanti quando questi non sono già presenti nel prodotto fitosanitario", "Sostanze di origine naturale che vengono distribuite al terreno e che aumentano l’assorbimento dei fertilizzanti"], correct: 0 },
+			{ q: "15. Quali sono i prodotti fitosanitari destinati ad utilizzatori non professionali?", a: ["Sono tutti i prodotti fitosanitari classificati come non pericolosi", "Sono i prodotti impiegabili su piante ornamentali e da fiore, in appartamento, balcone e giardino domestico (ppo) e quelli utilizzabili su piante edibili coltivate in forma amatoriale, il cui raccolto sia destinato al consumo familiare, nonché su tappeti erbosi ed aree incolte", "Sono tutti i coformulanti in quanto non risultano tossici per l’uomo"], correct: 1 },
+			{ q: "16. I prodotti impiegabili su piante edibili coltivate in ambito domestico:", a: ["Possono essere acquistati esclusivamente da coloro che possiedono il patentino", "Possono essere acquistati sia dagli utilizzatori non professionali che da coloro che possiedono il patentino", "Possono essere acquistati ovunque e solo dagli utilizzatori non professionali"], correct: 1 },
+			{ q: "17. Che cosa sono i prodotti fitosanitari anticrittogamici (fungicidi)?", a: ["Sono prodotti idonei per la lotta contro le malattie delle piante causate dai funghi", "Sono prodotti che servono esclusivamente per il contenimento dei marciumi post-raccolta", "Sono prodotti che modificano determinati processi nelle piante"], correct: 0 },
+			{ q: "18. A che cosa serve un prodotto fitosanitario insetticida?", a: ["A combattere gli insetti parassiti degli animali", "Ad eliminare il danno causato sulle colture dagli insetti", "A combattere gli insetti dannosi alle piante (fitofagi)"], correct: 2 },
+			{ q: "19. A che cosa serve un prodotto fitosanitario acaricida?", a: ["A combattere gli insetti parassiti degli animali", "A combattere le malattie crittogamiche", "A combattere gli acari dannosi alle piante"], correct: 2 },
+			{ q: "20. A che cosa serve un prodotto fitosanitario diserbante?", a: ["A contenere lo sviluppo indesiderato delle erbe infestanti", "Ad eliminare tutte le piante infestate da organismi nocivi", "Al solo diserbo di fossi, canali e giardini"], correct: 0 },
+			{ q: "21. Cosa sono i prodotti fitosanitari fitoregolatori?", a: ["prodotti per combattere le malattie crittogamiche", "prodotti impiegati per la concia delle sementi", "prodotti di sintesi che promuovono o inibiscono determinati processi naturali delle piante"], correct: 2 },
+			{ q: "22. Che cosa si intende per selettività di un insetticida?", a: ["la capacità di agire sugli insetti nocivi pur essendo di bassa tossicità per l'uomo", "la capacità di eliminare tutti gli insetti presenti nella coltura", "la capacità di agire nei confronti degli insetti nocivi, ma di rispettare il più possibile gli insetti utili presenti nei campi coltivati"], correct: 2 },
+			{ q: "23. Che cosa sono gli insetti predatori?", a: ["sono specie che si nutrono di insetti o acari dannosi alle piante", "sono insetti dannosi che vanno eliminati dalle colture agrarie", "è l’insieme degli insetti utili e dannosi che si possono trovare sulle colture agrarie"], correct: 0 },
+			{ q: "24. I prodotti non classificati sono meno dannosi sugli insetti ed acari utili rispetto ai prodotti tossici di categoria 1?", a: ["sì, sugli insetti e acari utili sono meno dannosi", "no, l'effetto sugli insetti ed acari utili non è legato alla pericolosità per l’uomo", "non sono mai dannosi"], correct: 1 },
+			{ q: "25. Che cosa si intende per selettività di un diserbante?", a: ["solo la coltura è danneggiata mentre le erbe infestanti sono risparmiate", "il prodotto rispetta la coltura agendo invece sulle erbe infestanti da controllare", "il prodotto rispetta gli insetti utili"], correct: 1 },
+			{ q: "26. Quale è la modalità di azione dei prodotti insetticidi e acaricidi?", a: ["stimolazione delle difese naturali della pianta", "limitazione dell’accoppiamento tra maschi e femmine", "ingestione, contatto e asfissia"], correct: 2 },
+			{ q: "27. Fra le modalità d’azione degli insetticidi quale è la più selettiva?", a: ["per contatto", "per ingestione", "per asfissia"], correct: 1 },
+			{ q: "28. È importante conoscere gli stadi di sviluppo degli insetti?", a: ["sì, per definire l’epoca di intervento in relazione al prodotto impiegato", "sì, perché gli insetticidi agiscono solo sulle larve e non sugli altri stadi di sviluppo", "no, non influisce sull’effetto del trattamento"], correct: 0 },
+			{ q: "29. Qual è la caratteristica di un prodotto fungicida sistemico?", a: ["la capacità di agire sistematicamente nei confronti di tutte le avversità presenti sulla pianta indipendentemente dal tipo di patogeno", "di non essere tossico per l'operatore che effettua il trattamento", "la capacità di essere assorbito dai tessuti vegetali, di trasferirsi per via linfatica nella pianta, e quindi combattere i patogeni non raggiungibili con prodotti che agiscono solo in superficie"], correct: 2 },
+			{ q: "30. Qual è l’epoca di intervento legata all’attività di un prodotto fungicida di copertura?", a: ["preventiva: impedisce lo sviluppo dell’infezione", "curativa: consente di combattere la malattia durante l’incubazione", "eradicante: blocca lo sviluppo di infezioni già manifeste"], correct: 0 },
+			{ q: "31. È corretto utilizzare i prodotti fungicidi con finalità eradicanti?", a: ["sì, perché si interviene solo quando la malattia è presente sulla coltura e si evitano trattamenti inutili", "no, perché il trattamento così effettuato risulta eccessivamente costoso", "no, perché il trattamento può risultare inefficace e si può incorrere nell’insorgenza di fenomeni di resistenza del patogeno"], correct: 2 },
+			{ q: "32. In base alla modalità d’azione, quali erbicidi possono influive negativamente sulla coltura che segue quella trattata?", a: ["di contatto (disseccanti)", "antigerminello (residuali)", "ad assorbimento fogliare sistemico"], correct: 1 },
+			{ q: "33. Non rispettare l’epoca di intervento riportata sull’etichetta di un diserbante può dar luogo a:", a: ["danni consistenti alla coltura o alla sua distruzione", "nessun danno perché i diserbanti vengono applicati solo in pre-semina", "danni consistenti soltanto se si interviene dopo una pioggia"], correct: 0 },
+			{ q: "34. In presenza di resistenza ad un insetticida, che cos’è opportuno fare?", a: ["aumentare il dosaggio del prodotto in questione e ripetere l’intervento frequentemente", "utilizzare prodotti tossici per inalazione per eliminare gli insetti dannosi resistenti all’insetticida in questione", "ricorrere a mezzi alternativi ai comuni insetticidi, come la confusione o il disorientamento sessuale"], correct: 2 },
+			{ q: "35. L'uso ripetuto degli stessi erbicidi può dar luogo:", a: ["alla presenza di piante rinate della coltura precedente", "a malerbe resistenti agli erbicidi impiegati, che si diffondono con il tempo", "a malerbe che soffocano la coltura"], correct: 1 },
+			{ q: "36. Cosa si intende per prodotto fitosanitario fitotossico?", a: ["che è mortale per l'uomo", "che provoca danni alle piante agrarie trattate", "che è dannoso per gli animali"], correct: 1 },
+			{ q: "37. Quali fenomeni si possono manifestare impiegando un erbicida a dose più alta di quella consigliata?", a: ["aumento della produzione perché si eliminano tutte le infestanti", "nessuno, se dato in pre-emergenza", "fitotossicità per la coltura"], correct: 2 },
+			{ q: "38. Che cosa è la persistenza d'azione di un prodotto fitosanitario?", a: ["la capacità di non essere asportato dalla pioggia", "la capacità di essere attivo nel tempo, nei confronti delle avversità per cui è registrato", "la capacità di agire anche durante il riposo vegetativo di una pianta"], correct: 1 },
+			{ q: "39. È possibile miscelare prodotti fitosanitari diversi?", a: ["no, mai", "sì, previa consultazione delle indicazioni di compatibilità in etichetta", "sì, sempre"], correct: 1 },
+			{ q: "40. Prima di miscelare due prodotti fitosanitari per un trattamento, cosa bisogna fare?", a: ["preparare una dose doppia di acqua, perché i prodotti sono due", "preparare due soluzioni distinte e poi unirle per vedere che cosa succede", "leggere attentamente la voce \"compatibilità\" sulle due etichette e assumere informazioni adeguate"], correct: 2 },
+			{ q: "41. Quando l'operatore agricolo miscela due o più prodotti fitosanitari con intervalli di sicurezza diversi, dopo quanti giorni può effettuare la raccolta?", a: ["dopo il numero di giorni indicato sul prodotto con il tempo di carenza più lungo", "dopo il numero di giorni indicato per il prodotto più tossico", "non prima di trenta giorni"], correct: 0 },
+			{ q: "42. Cosa sono i trattamenti a secco?", a: ["i diserbi eseguiti su terreno libero", "i trattamenti che non hanno bisogno di acqua come mezzo disperdente", "i trattamenti eseguiti con la pompa a spalla"], correct: 1 },
+			{ q: "43. Quali vantaggi offrono le nuove formulazioni dei prodotti fitosanitari (es. granuli idrodisperdibili, fluido microincapsulato, ecc.)?", a: ["nessuno, la loro efficacia non cambia", "economici, in quanto diminuisce la quantità di prodotto che viene distribuita sulla coltura", "minore pericolosità per l'operatore e maggiore facilità nella preparazione della miscela"], correct: 2 },
+			{ q: "44. Per la scelta del prodotto fitosanitario da utilizzarsi in un trattamento è necessario:", a: ["verificare in etichetta le registrazioni e le modalità di impiego", "scegliere un prodotto sistemico perché se piove il trattamento è più efficace", "non occorrono particolari precauzioni purché il prodotto sia efficace"], correct: 0 },
+			{ q: "45. Un prodotto registrato per la tentredine del pero, può essere utilizzato anche per la tentredine del susino?", a: ["sì, in quanto è un prodotto specifico contro la tentredine", "no, se non riporta in etichetta anche il susino come coltura autorizzata", "sì, l’uso del prodotto è indipendente dalla coltura"], correct: 1 },
+			{ q: "46. I prodotti fitosanitari possono essere impiegati per trattamenti di aree non agricole?", a: ["sì, sempre purché si rispetti il tempo di carenza", "no", "solo quando è specificatamente indicato in etichetta"], correct: 2 },
+			{ q: "47. È corretto impiegare prodotti fitosanitari a dosi più alte di quelle massime indicate in etichetta?", a: ["no, mai", "sì", "solamente se miscelati"], correct: 0 },
+			{ q: "48. Se si rende necessario eseguire un trattamento in prossimità della raccolta, quale tipo di prodotto occorre impiegare?", a: ["un prodotto fitosanitario che non venga assorbito per via cutanea per evitare rischi a carico della salute di chi esegue la raccolta", "un prodotto fitosanitario che possieda un tempo di carenza inferiore a quello fra il trattamento e la presumibile data di raccolta", "qualsiasi prodotto fitosanitario purché il prodotto raccolto venga lavato accuratamente prima della vendita"], correct: 1 },
+			{ q: "49. L'intervallo di sicurezza di un prodotto fitosanitario varia se viene diminuita la dose di impiego?", a: ["diminuisce riducendo la quantità di acqua impiegata", "diminuisce proporzionalmente alle concentrazioni", "non varia"], correct: 2 },
+			{ q: "50. In caso si riscontri una minore efficacia del trattamento, cosa è opportuno fare?", a: ["aumentare la dose del prodotto impiegato", "sostituire il prodotto impiegato con uno più tossico", "consultare un tecnico specializzato ed eventualmente sostituire il prodotto con un altro, registrato per la coltura e la malattia da combattere"], correct: 2 },
+			{ q: "51. Cosa sono i trattamenti a calendario?", a: ["quelli consigliati sui lunari", "quelli effettuati a date fisse uguali ogni anno", "quelli effettuati a scopo cautelativo in momenti fenologici prestabiliti senza tenere conto della presenza del parassita"], correct: 2 },
+			{ q: "52. È corretto eseguire i trattamenti fitosanitari a calendario seguendo esclusivamente le fasi fenologiche?", a: ["no, perché non si è certi che il parassita sia presente, o abbia raggiunto un livello di reale dannosità per la coltura", "sì, perché così si è sicuri di colpire in tempo l'avversità da combattere", "sì, ma solo se si usano prodotti insetticidi o acaricidi"], correct: 0 },
+			{ q: "53. Su cosa si basa la lotta guidata?", a: ["sulla valutazione del costo dell’intervento fitosanitario rispetto al danno economico previsto", "sull'esecuzione dei trattamenti a turni fissi in base all'andamento climatico", "sulla presenza di una guida tecnica nell’ambito delle rivendite"], correct: 0 },
+			{ q: "54. Come avviene la valutazione della soglia di intervento?", a: ["valutando la scadenza del precedente intervento fitosanitario", "attraverso monitoraggi e campionamenti di campo effettuati con procedura standard e ripetibile", "dividendo il numero di piante presenti nel campo coltivato per il numero di trattamenti fatti in un anno"], correct: 1 },
+			{ q: "55. Cosa si intende per lotta integrata?", a: ["l’utilizzo di tutti i fattori e le tecniche di difesa disponibili siano esse di natura chimica, fisica, agronomica, biologica, biotecnologica", "è l'utilizzo integrato di prodotti fitosanitari selettivi", "è l’uso di antagonisti naturali per il contenimento degli organismi dannosi"], correct: 0 },
+			{ q: "56. Qual è l’obiettivo della produzione integrata?", a: ["l’ottenimento di produzioni di qualità nel rispetto del produttore, del consumatore e dell’ambiente", "favorire la produzione di prodotti integrali", "incentivare, attraverso aiuti economici, la costituzione di aziende ad indirizzo misto zootecnico e fruttiviticolo"], correct: 0 },
+			{ q: "57. Cosa si intende per lotta biologica?", a: ["la totale abolizione dell'impiego di prodotti fitosanitari tossici", "l'uso di antagonisti naturali per contenere le popolazioni degli organismi dannosi alle colture", "l'impiego di prodotti fitosanitari selettivi che non eliminano gli insetti utili"], correct: 1 },
+			{ q: "58. Le tecniche di lotta biologica possono essere utilizzate solo in agricoltura biologica?", a: ["no, anche nell’agricoltura tradizionale, integrata, nonché nell’ambiente forestale ed urbano", "sì, poiché bisogna aderire ad un regolamento comunitario specifico", "sì, perché lotta e agricoltura biologica sono la stessa cosa"], correct: 0 },
+			{ q: "59. Che cosa si intende per agricoltura biologica?", a: ["una tecnica agricola in cui non si esegue mai nessun tipo di trattamento contro le avversità delle piante", "una tecnica agricola in cui, per la difesa delle colture, si impiegano solo prodotti irritanti o non classificati", "un sistema di produzione compatibile con l’ambiente che per la difesa delle colture si basa sull’abolizione delle sostanze chimiche di sintesi"], correct: 2 },
+			{ q: "60. Cosa significa il parametro della Dose Letale 50 (DL50)?", a: ["il 50% del prodotto può essere letale per via ingestiva, cutanea e inalatoria", "la dose che uccide il 50% degli animali da esperimento sottoposti al trattamento", "la dose da diluire al 50% per avere un'azione tossica per gli animali da esperimento per via ingestiva in maniera superiore a quella inalatoria"], correct: 1 },
+			{ q: "61. Cosa significa il parametro della Concentrazione Letale 50 (CL50)?", a: ["la dose di aria satura di prodotto fitosanitario che viene somministrata a 50 animali da esperimento su un totale di 100, mentre ai rimanenti 50 animali viene somministrata dell’acqua satura di prodotto fitosanitario concentrato", "la concentrazione in aria o acqua del prodotto che agisce allo stato di gas o di vapore e che ottiene lo stesso effetto della Dose Letale 50", "il 50% del prodotto può essere letale"], correct: 1 },
+			{ q: "62. Come sono etichettati e contrassegnati i prodotti fitosanitari tossici acuti di categoria 1, 2 e 3?", a: ["sono etichettati e contrassegnati con una croce di Sant'Andrea in un riquadro rettangolare di colore giallo-arancio", "con scritto, in caratteri ben visibili: attenzione, manipolare con prudenza “prodotto Molto Tossico”", "sono etichettati e contrassegnati con un pittogramma a forma di losanga con fondo bianco e bordo rosso contenente il simbolo del TESCHIO SU TIBIE INCROCIATE di colore nero con avvertenza sottostante “PERICOLO”"], correct: 2 },
+			{ q: "63. Come sono etichettati e contrassegnati i prodotti fitosanitari tossici acuti di categoria 4?", a: ["sono etichettati e contrassegnati con il simbolo di pericolo T, con teschio su tibie incrociate di colore nero in campo giallo arancione e l’indicazione di pericolo \"Tossico”", "con scritto, in caratteri ben visibili: attenzione, manipolare con prudenza “prodotto Tossico”", "sono etichettati e contrassegnati con un pittogramma a forma di losanga con fondo bianco e bordo rosso contenente il simbolo del PUNTO ESCLAMATIVO di colore nero con avvertenza sottostante “ATTENZIONE”"], correct: 2 },
+			{ q: "64. Come sono etichettati e contrassegnati i prodotti fitosanitari “TOSSICI SULLA PROLE PER GLI EFFETTI DELLA LATTAZIONE”?", a: ["non è previsto nessun pittogramma ed avvertenza, ma è prevista l’indicazione di pericolo H", "sono etichettati e contrassegnati con il simbolo di pericolo T, con teschio su tibie incrociate di colore nero in campo giallo arancione e l’indicazione di pericolo \"Tossico”", "sono etichettati e contrassegnati con un pittogramma a forma di losanga con fondo bianco e bordo rosso contenente il simbolo del PUNTO ESCLAMATIVO di colore nero con avvertenza sottostante “ATTENZIONE”"], correct: 0 },
+			{ q: "65. Il punto esclamativo si trova solo su prodotti tossici di categoria 4?", a: ["no, anche sui prodotti irritanti e sensibilizzanti per la pelle", "sì", "indica prodotti tossici che sono contemporaneamente infiammabili"], correct: 0 },
+			{ q: "66. Come sono etichettati e contrassegnati i prodotti fitosanitari sensibilizzanti per inalazione?", a: ["sono etichettati e contrassegnati con un teschio nero su ossa incrociate inserite in un riquadro rettangolare di colore giallo-arancio e la scritta “Irritante”", "con la sola scritta “Nocivo”, senza nessun contrassegno e disegno particolare", "sono etichettati e contrassegnati con un pittogramma a forma di losanga con fondo bianco e bordo rosso contenente il simbolo della PERSONA DANNEGGIATA di colore nero con avvertenza sottostante di “PERICOLO”"], correct: 2 },
+			{ q: "67. Come sono etichettati e contrassegnati i prodotti fitosanitari sensibilizzanti per contatto con la pelle?", a: ["sono etichettati e contrassegnati con un teschio nero su ossa incrociate inserite in un riquadro rettangolare di colore giallo-arancio e la scritta “Irritante”", "con la sola scritta “Nocivo”, senza disegni particolari, ma il colore è sempre giallo-arancio", "sono etichettati e contrassegnati con un pittogramma a forma di losanga con fondo bianco e bordo rosso contenente il simbolo del PUNTO ESCLAMATIVO di colore nero con avvertenza sottostante di “ATTENZIONE”"], correct: 2 },
+			{ q: "68. Come sono etichettati e contrassegnati i prodotti fitosanitari irritanti per le vie respiratorie?", a: ["con una «I» maiuscola, inserita su di un quadrato di color arancio", "sono etichettati e contrassegnati con il simbolo di pericolo Xi, con croce di S. Andrea nera in campo giallo arancione e l’indicazione di pericolo \"Irritante”", "sono etichettati e contrassegnati con un pittogramma a forma di losanga con fondo bianco e bordo rosso contenente il simbolo del PUNTO ESCLAMATIVO di colore nero con avvertenza sottostante di “ATTENZIONE”"], correct: 2 },
+			{ q: "69. Come sono etichettati e contrassegnati i prodotti fitosanitari cancerogeni, mutageni e tossici per il ciclo riproduttivo di categoria 2?", a: ["sono etichettati e contrassegnati con un pittogramma a forma di losanga con fondo bianco e bordo rosso contenente il simbolo della PERSONA DANNEGGIATA di colore nero con avvertenza sottostante “ATTENZIONE”", "con la sola scritta “Nocivo”, senza nessun contrassegno e disegno particolare", "sono etichettati e contrassegnati con il simbolo di pericolo Xn, con croce di S. Andrea nera in campo giallo arancio e l’indicazione di pericolo \"Nocivo”"], correct: 0 },
+			{ q: "70. Come si fa a capire se un prodotto fitosanitario è nocivo se inalato?", a: ["si capisce dalla lettura del simbolo di pericolo", "si capisce dalla lettura del nome commerciale del prodotto fitosanitario", "si capisce dalla lettura dell’indicazione di pericolo nell’etichettatura di pericolo"], correct: 2 },
+			{ q: "71. Come sono etichettati e contrassegnati i prodotti fitosanitari facilmente infiammabili?", a: ["sono etichettati e contrassegnati con un pittogramma a forma di losanga con fondo bianco e bordo rosso contenente una fiamma di colore nero con avvertenza sottostante di “PERICOLO”", "sono etichettati e contrassegnati con il simbolo di pericolo F, con fiamma nera in campo gialloarancione e l’indicazione di pericolo \"Facilmente Infiammabile”", "sono etichettati e contrassegnati con una croce di Sant'Andrea in un riquadro rettangolare di colore giallo-arancio e la scritta “Infiammabile”"], correct: 0 },
+			{ q: "72. Un prodotto fitosanitario non classificato pericoloso può contenere sostanze pericolose per la salute dell’uomo?", a: ["sì, può contenere sostanze molto pericolose, anche se in piccole quantità", "no, perché non è classificato pericoloso", "no, perché non è obbligatorio ottenere la scheda di sicurezza"], correct: 0 },
+			{ q: "73. E’ necessario acquisire il patentino per acquistare prodotti fitosanitari pericolosi per l’ambiente?", a: ["il patentino è obbligatorio per tutti i prodotti fitosanitari di uso professionale", "no, perché non sono pericolosi per la salute dell’uomo", "solo quando vengono irrorati su terreni seminativi in pieno campo"], correct: 0 },
+			{ q: "74. Che cosa si intende per etichettatura di pericolo dei prodotti fitosanitari?", a: ["è l’insieme del pittogramma, delle avvertenze, delle indicazioni di pericolo, dei consigli di prudenza con il nome del prodotto fitosanitario e dell’impresa che lo ha immesso in commercio", "è l’etichetta che deve essere apposta per legge sulle confezioni di tutti i prodotti chimici", "è il simbolo di pericolo presente sull’etichetta delle confezioni"], correct: 0 },
+			{ q: "75. Ottenere la scheda di sicurezza dei prodotti fitosanitari è obbligatorio?", a: ["sempre, per prodotti pericolosi e non pericolosi contenenti almeno una sostanza pericolosa", "sempre, ma solo per confezioni con contenuto superiore a 1 litro", "no, non è obbligatorio ottenere la scheda di sicurezza per i prodotti fitosanitari non classificati pericolosi"], correct: 0 },
+			{ q: "76. Quando deve essere fornita obbligatoriamente la scheda di dati di sicurezza dei prodotti fitosanitari?", a: ["La prima volta che si acquista un prodotto fitosanitario", "sempre, ma solo per confezioni con contenuto superiore a 1 litro", "mai, non è obbligatorio fornire la scheda di dati di sicurezza per i prodotti fitosanitari"], correct: 0 },
+			{ q: "77. Di quante voci informative è composta la scheda di sicurezza?", a: ["18 voci obbligatorie", "11 voci per i prodotti fitosanitari non pericolosi e 16 per quelli pericolosi", "16 voci obbligatorie"], correct: 2 },
+			{ q: "78. A cosa serve la scheda di dati di sicurezza di un prodotto fitosanitario per un utilizzatore professionale qualunque?", a: ["serve per scegliere le necessarie misure di prevenzione e protezione per l’uomo e l’ambiente", "serve solo quando si impiegano prodotti molto tossici, tossici e nocivi", "serve per adottare un corretto smaltimento dei contenitori dei prodotti fitosanitari"], correct: 0 },
+			{ q: "79. Come ci si deve comportare se non viene consegnata la scheda di dati di sicurezza di un prodotto fitosanitario all’atto del primo acquisto?", a: ["si aspetta che venga consegnata in un secondo momento", "se non viene consegnata vuol dire che non è necessaria", "si richiede obbligatoriamente al rivenditore"], correct: 2 },
+			{ q: "80. La scheda di dati di sicurezza di un prodotto fitosanitario può essere consegnata su CD o per via elettronica?", a: ["sì, ma solo se si dichiara di essere in possesso di un computer o di essere in possesso di un collegamento a internet", "no, la scheda di dati di sicurezza deve essere consegnata sempre a mano in fotocopia cartacea", "si richiede obbligatoriamente al rivenditore"], correct: 0 },
+			{ q: "81. Se non si è in possesso del computer come possiamo avere la scheda di dati di sicurezza di un prodotto fitosanitario all’atto del primo acquisto?", a: ["va bene lo stesso anche se non l’abbiamo, perché l’etichetta è sufficiente", "se non viene consegnata vuol dire che non è necessaria", "richiediamo la fotocopia cartacea"], correct: 2 },
+			{ q: "82. Si incorre in sanzioni se non si è in possesso della scheda di dati di sicurezza di un prodotto fitosanitario in fase di utilizzo?", a: ["si, anche fino a 18.000 euro", "se non viene consegnata non si incorre in nessuna sanzione", "solo il rivenditore viene sanzionato"], correct: 0 },
+			{ q: "83. A cosa serve la scheda di dati di sicurezza di un prodotto fitosanitario per un datore di lavoro?", a: ["serve prevalentemente per valutare il rischio da agenti chimici pericolosi e per scegliere le necessarie misure di prevenzione e protezione per l’uomo e l’ambiente", "serve solo quando si impiegano prodotti molto pericolosi", "serve per adottare un corretto smaltimento dei contenitori"], correct: 0 },
+			{ q: "84. E’ prevista la scheda di dati di sicurezza per i prodotti fitosanitari solo infiammabili, ma non pericolosi per la salute?", a: ["si, la SDS deve essere consegnata per i prodotti fitosanitari pericolosi per la salute e per sicurezza", "no, la SDS non deve essere consegnata per i prodotti fitosanitari non pericolosi per la salute", "no, i prodotti fitosanitari infiammabili non sono mai pericolosi per la salute"], correct: 0 },
+			{ q: "85. Cosa si intende per intervallo di sicurezza?", a: ["l'intervallo espresso in giorni che deve intercorrere tra un trattamento e l'altro", "l'intervallo di tempo espresso in giorni che deve intercorrere tra l'ultimo trattamento e la raccolta o la messa in commercio di derrate alimentari immagazzinate", "l'intervallo di tempo espresso in giorni dopo il quale diventa accessibile il terreno trattato"], correct: 1 },
+			{ q: "86. Se si effettuano trattamenti della frutta in post-raccolta, prima di immetterla sul mercato è necessario", a: ["pulirla in maniera che non restino tracce evidenti del trattamento", "lavarla se si utilizza prima del giorno di scadenza del periodo di sicurezza", "rispettare assolutamente i tempi di carenza"], correct: 2 },
+			{ q: "87. Il lavaggio e la conservazione dei prodotti ortofrutticoli successivi al trattamento, modificano l'intervallo di sicurezza di un prodotto fitosanitario applicato in campo?", a: ["scompare il periodo di sicurezza", "rimane inalterato il periodo di sicurezza", "il periodo di sicurezza viene ridotto"], correct: 1 },
+			{ q: "88. Nel caso di vegetali destinati alla trasformazione industriale o surgelati, si deve o no tenere conto dell'intervallo di sicurezza?", a: ["sì, sempre", "no, se i prodotti vengono lavati con acqua calda", "no, mai"], correct: 0 },
+			{ q: "89. Il tempo di carenza è indicato in etichetta?", a: ["sì, sempre quando le colture o le derrate hanno una destinazione alimentare", "a discrezione della ditta produttrice del formulato", "no, mai"], correct: 0 },
+			{ q: "90. Dovendo fare un trattamento su coltura ortiva a raccolta scalare:", a: ["bisogna rispettare i tempi di carenza soltanto per l'ultima raccolta", "non bisogna rispettare i tempi di carenza in quanto la raccolta è scalare", "bisogna sempre rispettare i tempi di carenza"], correct: 2 },
+			{ q: "91. Cosa si intende per limite di tolleranza?", a: ["il residuo massimo di prodotto fitosanitario tollerato sui prodotti agricoli freschi o sulle derrate immesse al consumo", "la quantità massima di prodotto fitosanitario che è possibile distribuire in campo senza arrecare danni all’ambiente", "la dose massima di prodotto fitosanitario tollerata dalla pianta affinché non si verifichino delle ustioni o comunque fenomeni di fitotossicità"], correct: 0 },
+			{ q: "92. Che cosa si intende per residuo ammesso o limite di tolleranza di un prodotto fitosanitario?", a: ["la percentuale di sostanza attiva presente nel prodotto commerciale", "la quantità massima di prodotto fitosanitario che può essere presente sui prodotti destinati all'alimentatione", "la quantità di prodotto fitosanitario che rimane nella botte al termine del trattamento"], correct: 1 },
+			{ q: "93. Che cosa è il tempo di rientro per l’operatore agricolo?", a: ["l’intervallo di tempo tra il trattamento eseguito con un prodotto sistemico ed il suo assorbimento all’interno della pianta", "l’intervallo di tempo tra il trattamento e il rientro nell’area trattata per svolgere attività lavorative senza mezzi protettivi", "l’intervallo di tempo tra il momento in cui si esegue il trattamento e il rientro in azienda"], correct: 1 },
+			{ q: "94. Quando in etichetta non è indicato il tempo di rientro per l’operatore agricolo quanto tempo è consigliabile aspettare prima di entrare nelle aree trattate senza misure protettive?", a: ["almeno 24 ore", "1 ora", "non è necessario aspettare tempo e rispettare nessuna misura protettiva in quanto in etichetta non è descritta nessuna precauzione"], correct: 0 },
+			{ q: "95. L’immissione in commercio e la produzione dei prodotti fitosanitari sono soggette ad una specifica autorizzazione?", a: ["non necessitano di autorizzazione perché i prodotti fitosanitari sono di libera produzione e vendita", "sono soggette ad autorizzazione dell'Unità Sanitaria Locale", "sono soggette ad autorizzazione del Ministero della Salute"], correct: 2 },
+			{ q: "96. È possibile utilizzare prodotti di cui sia stata ritirata l’autorizzazione?", a: ["sì, purché nell’utilizzo si eseguano le indicazioni di un tecnico", "solo se è previsto un periodo per lo smaltimento delle scorte", "sì, solamente se vengono utilizzati in epoche lontane dalla raccolta"], correct: 1 },
+			{ q: "97. Dove possono essere acquistati i prodotti fitosanitari ad uso professionale?", a: ["da qualunque rivenditore poiché non esistono vincoli o autorizzazioni particolari per la loro vendita", "esclusivamente dai rivenditori autorizzati", "da qualunque rivenditore, purché i prodotti siano in confezione sigillata"], correct: 1 },
+			{ q: "98. Possono essere acquistati prodotti fitosanitari in confezioni non sigillate o non originali?", a: ["no, in nessun caso", "sì, purché si tratti di prodotti registrati", "sì, purché il rivenditore ne garantisca la provenienza"], correct: 0 },
+			{ q: "99. Il patentino può essere lasciato in deposito presso il distributore?", a: ["sì, se gli acquisti vengono eseguiti sempre nella medesima rivendita", "no, in quanto il patentino è un documento strettamente personale", "sì, fino a quando il patentino non è scaduto"], correct: 1 },
+			{ q: "100. Quale responsabilità assume chi acquista prodotti fitosanitari ad uso professionale?", a: ["nessuna responsabilità se il prodotto viene impiegato da parenti", "è responsabile solamente se il prodotto viene impiegato da persone minorenni", "la responsabilità diretta di un’idonea conservazione, di un corretto impiego e smaltimento del prodotto"], correct: 2 },
+			{ q: "101. Il titolare del patentino può rivendere o regalare ad altre persone prodotti fitosanitari ad uso professionale?", a: ["sì, ma solamente se è certo che il loro impiego avvenga in modo corretto", "no, in nessun caso", "sì, se queste persone sono in possesso del patentino"], correct: 1 },
+			{ q: "102. Quale deve essere il comportamento nel caso in cui si manifestino delle perdite di prodotto fitosanitario al momento del loro trasporto dal rivenditore all’azienda agricola o al momento della loro distribuzione con il mezzo irrorante?", a: ["lavare la strada e convogliare il residuo nei fossi", "è sufficiente raccogliere personalmente il materiale disperso", "informare la pubblica autorità sanitaria e ambientale e comunque adoperarsi per evitare ulteriori danni"], correct: 2 },
+			{ q: "103. Come debbono essere conservati i prodotti fitosanitari", a: ["in un locale, area o armadio areati, chiusi a chiave, su cui deve essere apposta la segnaletica di sicurezza e di salute e i numeri telefonici delle emergenze", "in un luogo appartato dell'abitazione", "è sufficiente che siano tenuti separati da sostanze alimentari o mangimi"], correct: 0 },
+			{ q: "104. Dove devono essere detenuti i prodotti fitosanitari dall’utilizzatore professionale?", a: ["in un locale qualsiasi purché riparato dalla pioggia", "in un locale refrigerato", "in locali idonei e non adibiti al deposito di generi alimentari e mangimi"], correct: 2 },
+			{ q: "105. Quale deve essere il comportamento nel caso in cui le confezioni presenti nel locale adibito a magazzino dei prodotti fitosanitari si rompano e fuoriescano quantità anche minime di prodotto fitosanitario?", a: ["occorre lavare la superficie imbrattata con acqua e convogliare il residuo nella fognatura", "occorre pulire immediatamente le superfici imbrattate, raccogliere il prodotto, se liquido, con materiale assorbente quale sabbia per impedire che il prodotto finisca nella fognatura e smaltire il rifiuto secondo le norme vigenti", "è sufficiente asciugare la superficie con una spugna o con uno strofinaccio"], correct: 1 },
+			{ q: "106. Se si devono pesare prodotti fitosanitari in polvere", a: ["è meglio pesarli in un locale chiuso, così non si inquina l’ambiente", "è meglio pesarli all’aperto, in assenza di vento, cercando di non alzare polvere e di non disperderli", "è meglio pesarli in un locale chiuso ma lontano dall’abitazione"], correct: 1 },
+			{ q: "107. Dove è opportuno miscelare i prodotti fitosanitari?", a: ["su un tavolo sotto una tettoia nelle vicinanze dell'abitazione", "nell’area attrezzata o nel luogo più prossimo alla coltura che si intende trattare ed in ogni caso lontano da abitazioni, pozzi e corsi d’acqua superficiali", "in un locale con porta munita di serratura, separato dall'abitazione"], correct: 1 },
+			{ q: "108. È permesso prelevare acqua dai fossi o dai canali direttamente con mezzi irroranti?", a: ["no", "sì, purché si lavi prima dell'uso il tubo aspirante", "sì, ma solo con mezzi aspiranti separati ed autonomi dall'attrezzatura irrorante"], correct: 2 },
+			{ q: "109. La tracimazione della miscela dall'attrezzatura è da evitare?", a: ["no, purché il prodotto così perduto non inquini i corsi d'acqua circostanti", "sì, sempre", "no, se si tratta di prodotti poco tossici"], correct: 1 },
+			{ q: "110. Quando si effettuano trattamenti, è opportuno:", a: ["preparare una quantità di miscela irrorante effettivamente necessaria per il trattamento", "scaricare la soluzione avanzata sul terreno evitando che finisca nel più vicino fossato", "distribuire la soluzione rimasta nella coltura limitrofa"], correct: 0 },
+			{ q: "111. Come è opportuno segnalare un campo trattato con prodotti fitosanitari?", a: ["recintando adeguatamente tutti i campi trattati", "appendendo agli alberi i contenitori dei prodotti fitosanitari utilizzati", "applicando cartelli in numero sufficiente, con avvertimenti idonei, ai margini delle colture trattate"], correct: 2 },
+			{ q: "112. In caso di giornata ventosa è corretto eseguire il trattamento?", a: ["sì, se questo è veramente necessario, purché si utilizzi la maschera protettiva", "no, per il rischio che la nube tossica colpisca l'operatore e si sposti lontano dalla coltura trattata", "sì, purché si riduca la pressione di esercizio e la velocità di avanzamento"], correct: 1 },
+			{ q: "113. Sono consentiti i trattamenti insetticidi, acaricidi o con altri prodotti tossici per le api durante il periodo della fioritura?", a: ["sì, su tutte le colture", "sì, con esclusione dei frutteti", "no, in nessun caso per non danneggiare gli insetti impollinatori"], correct: 2 },
+			{ q: "114. Esiste un divieto legale d’impiego dei prodotti fitosanitari in aree di rispetto intorno a pozzi o sorgenti di acque destinate al consumo umano?", a: ["sì, entro un raggio di 200 metri", "no", "sì, entro un raggio di 50 metri, salvo deroghe specifiche"], correct: 0 },
+			{ q: "115. Quali precauzioni è d'obbligo adottare trattando in prossimità di strade, corsi d'acqua e colture confinanti?", a: ["nessuna precauzione se il prodotto fitosanitario non è molto tossico", "tutte le precauzioni affinché la nube irrorante non fuoriesca dall'appezzamento irrorato", "nessuna precauzione in assenza di vento"], correct: 1 },
+			{ q: "116. Come si deve comportare l'operatore al termine del trattamento?", a: ["deve lavarsi le mani", "nessuna precauzione perché al termine del trattamento non si corre più alcun pericolo", "deve spogliarsi e lavarsi abbondantemente con acqua e sapone"], correct: 2 },
+			{ q: "117. Soffiare dentro gli ugelli di distribuzione otturati è corretto?", a: ["no, in nessun caso, per il grave rischio di intossicazione", "sì, ma solo se non si usano prodotti molto tossici, tossici e nocivi", "sì, in quanto è l'unico metodo veloce per eliminare l'otturazione"], correct: 0 },
+			{ q: "118. L’emendamento alla direttiva macchine (direttiva n. 127/09) prevede:", a: ["che tutti i mezzi siano opportunamente tarati", "che le attrezzature irroranti di nuova fabbricazione siano progettate e costruite secondo criteri che salvaguardino la salute dell’uomo e proteggano l’ambiente da fenomeni di inquinamento", "nessuna ricaduta pratica sulle irroratrici, perché interessa altre tipologie di mezzi meccanici operanti in agricoltura"], correct: 1 },
+			{ q: "119. In seguito alla attuazione della direttiva Ce n. 128/09, l’obbligo di controllo funzionale delle irroratrici riguarda:", a: ["tutte le aziende che utilizzano in modo professionale i mezzi irroranti", "nessuno, è legalmente prevista solo la forma di adesione “volontaria” al servizio di controllo delle attrezzature", "solo le aziende che aderiscono ad alcune misure del Piano regionale di sviluppo rurale o che rientrano nel contesto applicativo dell’OCM ortofrutta e delle L.L.R.R. 28/98 – 28/99"], correct: 0 },
+			{ q: "120. Il controllo funzionale, la regolazione e la manutenzione delle macchine irroratrici sono necessarie per:", a: ["fare meno trattamenti poiché aumenta notevolmente l’efficienza dell’attrezzatura", "ridurre i tempi necessari per i trattamenti poiché si utilizzano minori quantità d’acqua", "ridurre gli effetti negativi sulla salute e l’ambiente e migliorare l'efficacia dei trattamenti"], correct: 2 },
+			{ q: "121. È necessaria la manutenzione ordinaria alle macchine utilizzate per i trattamenti?", a: ["no, visto che le nuove attrezzature sono garantite dal costruttore", "sì, con un lavaggio manuale per evitare di intasare tubi e raccordi", "sì, controllando ugelli, raccordi e tubi, rubinetti e manometri, se ne verifica lo stato di usura e il calo degli standard di efficacia"], correct: 2 },
+			{ q: "122. È obbligatorio registrare i trattamenti alle colture agricole con prodotti fitosanitari?", a: ["sì, ma solo quando si utilizzano prodotti molto pericolosi", "sì, sempre", "no, è obbligatorio solo nel caso in cui il trattamento abbia procurato fastidio a qualcuno"], correct: 1 },
+			{ q: "123. Da chi deve essere compilato il registro dei trattamenti?", a: ["dal commercialista", "dall’utilizzatore o, in alternativa, da un suo delegato o dal contoterzista", "da chi ha venduto il prodotto utilizzato per il trattamento"], correct: 1 },
+			{ q: "124. Il registro dei trattamenti deve esser compilato solo per i trattamenti effettuati nelle aziende agricole?", a: ["sì, indipendentemente dalla coltura trattata", "no, anche per i trattamenti effettuati negli orti e giardini familiari", "no, anche per la difesa delle derrate alimentari e per gli impieghi extra-agricoli (verde pubblico, diserbo canali, sedi ferroviarie ecc.)"], correct: 2 },
+			{ q: "125. Quali sono i rischi nell'utilizzare prodotti fitosanitari illegali?", a: ["solo rischi legati a frode fiscale per l'agricoltore", "rischi per la collettività, per l’agricoltore e per le aziende produttrici di prodotti fitosanitari", "rischio economico per le aziende produttrici di PF"], correct: 1 },
+			{ q: "126. Come comportarsi all'atto dell'acquisto di prodotti fitosanitari?", a: ["controllare la corretta etichettatura dei prodotti fitosanitari", "è sufficiente acquistare confezioni integre", "rivolgersi unicamente a rivenditori autorizzati e controllare la corretta etichettatura dei prodotti fitosanitari"], correct: 2 },
+			{ q: "127. In caso di dubbi circa la provenienza e l'autenticità di prodotti fitosanitari, cosa fare?", a: ["abbandonare in un cassonetto della spazzatura i prodotti appena acquistati per non correre rischi", "avvisare le autorità competenti, quali il Comando Carabinieri Politiche Agricole", "smaltire correttamente le confezioni sospette"], correct: 1 },
+			{ q: "128. Non rispettando le norme precauzionali per l'uso dei prodotti fitosanitari a quale rischio per la salute si sottopone l'operatore?", a: ["solo intossicazione acuta", "intossicazione acuta, cronica ed allo sviluppo di malattie allergiche", "solo intossicazione cronica ed allo sviluppo di malattie allergiche"], correct: 1 },
+			{ q: "129. Quando si può verificare un’intossicazione acuta?", a: ["quando l’organismo è esposto, in tempi brevi, a quantità elevate di sostanze pericolose per la salute", "quando l’organismo è esposto a quantità relativamente piccole di prodotti fitosanitari", "quando l’organismo è esposto a prodotti fitosanitari classificati solo molto tossici e tossici"], correct: 0 },
+			{ q: "130. Quando si può verificare un’intossicazione cronica?", a: ["solo se l’organismo è esposto, in tempi brevi, a quantità elevate di sostanze pericolose per la salute", "anche per esposizione prolungata a quantità relativamente piccole di prodotti fitosanitari", "solo quando l’organismo è esposto a prodotti fitosanitari classificati tossici acuti"], correct: 1 },
+			{ q: "131. Attraverso quali vie d’assorbimento dell’uomo può avvenire un’intossicazione acuta?", a: ["solamente per ingestione", "solamente per contatto con le mani e con il corpo", "per ingestione, per contatto e per inalazione"], correct: 2 },
+			{ q: "132. Attraverso quali vie d’assorbimento dell’uomo può avvenire un’intossicazione cronica?", a: ["solamente per ingestione", "per ingestione, per contatto e per inalazione", "particolarmente per ingestione"], correct: 1 },
+			{ q: "133. All'insorgere di un’intossicazione che si ritiene collegata con l'impiego dei prodotti fitosanitari, com’è opportuno comportarsi?", a: ["bere del latte e distendersi per qualche ora", "provocare il vomito e mettersi a riposo", "chiamare immediatamente il 118 per il trasporto in ospedale"], correct: 2 },
+			{ q: "134. Nel caso di intossicazione acuta da prodotti fitosanitari, quali provvedimenti immediati occorre adottare?", a: ["lavare l'intossicato con acqua e somministrare una bevanda calda", "mettere a letto il soggetto, chiamare il medico curante facendogli vedere il luogo dell’intossicazione", "chiamare il 118, trasportare l’intossicato lontano dal luogo della contaminazione, spogliarlo e lavarlo con acqua e non somministrare alcuna bevanda, aspettare l’arrivo del personale del 118 a cui verrà consegnata la scheda di sicurezza del prodotto che ha causato l'intossicazione"], correct: 2 },
+			{ q: "135. All'insorgere di un malessere che si ritiene collegato con l'impiego dei prodotti fitosanitari, come è opportuno comportarsi?", a: ["bere del latte e distendersi per qualche ora", "provocare il vomito e mettersi a riposo", "rivolgersi al pronto soccorso portando con sé la scheda di sicurezza dei prodotti utilizzati"], correct: 2 },
+			{ q: "136. In caso di malessere o di intossicazione che si ritiene collegato con l'impiego dei prodotti fitosanitari, quale documentazione è necessario portare con sé al pronto soccorso?", a: ["il registro dei trattamenti eseguiti nei 30 giorni precedenti all’intossicazione", "la scheda di sicurezza dei prodotti fitosanitari impiegati", "il patentino agricolo rilasciato dall’amministrazione provinciale"], correct: 1 },
+			{ q: "137. A quale categoria europea appartengono i dispositivi di protezione individuale (DPI) per il rischio d’esposizione a prodotti fitosanitari?", a: ["alla prima categoria", "alla terza categoria", "alla seconda categoria"], correct: 1 },
+			{ q: "138. Quali sono i requisiti essenziali di salute e di sicurezza che deve possedere un DPI?", a: ["dichiarazione di conformità CE, marcatura CE, nota informativa", "marcatura CE", "nota tecnica illustrativa"], correct: 0 },
+			{ q: "139. Come deve essere la tuta protettiva degli addetti ai trattamenti?", a: ["di fattura comune", "di qualsiasi tipo, purché pulita", "possedere la marcatura e la dichiarazione di conformità CE e la nota informativa scritta che indichi che è in grado di proteggere in caso di contatto con prodotti fitosanitari"], correct: 2 },
+			{ q: "140. Qual è il miglior tipo di protezione che deve garantire una tuta da impiegare per trattamenti fitosanitari con trattori non in possesso della cabina pressurizzata?", a: ["tuta Tipo 3, 4, 5, 6", "tuta Tipo 5 e 6", "tuta Tipo 6"], correct: 0 },
+			{ q: "141. A quale categoria appartengono i guanti in nitrile ed in neoprene da indossare quando si aprono le confezioni dei prodotti fitosanitari?", a: ["1a categoria", "2a categoria", "3a categoria"], correct: 2 },
+			{ q: "142. Per proteggere le mani durante l'impiego dei prodotti fitosanitari è opportuno utilizzare guanti:", a: ["in pelle scamosciata", "in tessuto non tessuto", "con pittogramma di protezione dal rischio chimico"], correct: 2 },
+			{ q: "143. Qual è il tipo di DPI per la protezione delle vie respiratorie più idoneo per un operatore agricolo che ha barba o basette lunghe e che sta aprendo le confezioni di prodotti fitosanitari tossici acuti di categoria 1, 2, 3?", a: ["semimaschera o quarto di maschera", "casco elettroventilato", "facciale filtrante"], correct: 1 },
+			{ q: "144. Il filtro combinato per la protezione da polveri e gas che si producono nell’uso dei prodotti fitosanitari a quale categoria deve appartenere?", a: ["1a categoria", "2a categoria", "3a categoria"], correct: 2 },
+			{ q: "145. In quante classi europee (EN) di protezione si suddividono i filtri antipolvere?", a: ["2", "3", "6"], correct: 1 },
+			{ q: "146. In quante classi europee (EN) si suddividono i filtri per antigas?", a: ["1", "3", "4"], correct: 1 },
+			{ q: "147. Con quali colori è contrassegnato un filtro combinato per polveri e gas che si producono nell’uso dei prodotti fitosanitari?", a: ["grigio-bianco", "bianco-marrone", "bianco-grigio-marrone"], correct: 1 },
+			{ q: "148. Nei trattamenti fitosanitari qual è il tipo di filtro che devono avere le trattrici con cabina pressurizzata?", a: ["non è necessario il filtro quando il prodotto fitosanitario non è pericoloso", "un filtro combinato in grado di trattenere polveri, vapori e nebbie", "un filtro idoneo solo per polveri di prodotti fitosanitari tossici acuti di categoria 1"], correct: 1 },
+			{ q: "149. Quando viene prescritto l'impiego dei dispositivi di protezione individuale, questi devono essere indossati:", a: ["solamente se si esegue il trattamento in una giornata ventosa", "solamente se non procura disagi personali nell'effettuazione del trattamento", "sempre, quando non siano sufficienti le misure di protezione collettiva"], correct: 2 },
+			{ q: "150. Come devono essere conservati i DPI?", a: ["appesi, insieme agli abiti da lavoro", "lontano dalla portata dei bambini", "in luoghi asciutti e puliti"], correct: 2 },
+			{ q: "151. Quale manutenzione richiede la maschera che viene usata durante il trattamento?", a: ["va lavata dopo l'uso, separando il filtro che va sostituito frequentemente, seguendo le indicazioni del costruttore", "va revisionata almeno una volta all'anno presso il rivenditore autorizzato che rilascia sempre un attestato di conformità CE", "va lavata con acqua e sapone dopo l'uso"], correct: 0 },
+			{ q: "152. Per quale categoria di dispositivi di protezione individuale (DPI) è obbligatoria la formazione dei lavoratori?", a: ["solo per i DPI di 3a categoria", "per i DPI per l’udito e di 3a categoria", "per tutte le categorie di DPI"], correct: 2 },
+			{ q: "153. L’addestramento per l’impiego dei DPI per le vie respiratorie negli ambienti di lavoro deve essere compiuto da:", a: ["un tecnico competente", "un ispettore del lavoro", "un rappresentante dei lavoratori"], correct: 0 },
+			{ q: "154. Per quale categoria di dispositivi di protezione individuale (DPI) è obbligatorio l’addestramento dei lavoratori?", a: ["solo per i DPI di 3a categoria", "per DPI per l’udito e di 3a categoria", "per tutte le categorie di DPI"], correct: 1 },
+			{ q: "155. Un DPI per la protezione del corpo o delle mani rispetta i requisiti essenziali di salute e di sicurezza quando:", a: ["possiede la marcatura CE, la nota informativa scritta che indichi che è in grado di proteggere ad esempio in caso di contatto con prodotti fitosanitari e l’addestramento all’impiego è effettuata da un formatore qualificato", "possiede la marcatura CE e l’addestramento all’impiego è effettuata da un formatore qualificato", "possiede la marcatura, la dichiarazione di conformità CE e la nota informativa scritta che indica che è in grado di proteggere in caso di contatto con prodotti fitosanitari"], correct: 2 },
+			{ q: "156. Un prodotto fitosanitario non classificato pericoloso è un agente chimico pericoloso?", a: ["sì, perché può essere pericoloso durante l’impiego", "no, perché non è classificato pericoloso", "no, perché non è obbligatorio ottenere la scheda di sicurezza"], correct: 0 },
+			{ q: "157. Quali sono le misure preventive e protettive da adottare obbligatoriamente quando vi è un rischio chimico rilevante per la salute e la sicurezza dei lavoratori?", a: ["i dispositivi di protezione individuale", "tutte le misure specifiche di prevenzione e protezione, le disposizioni in caso d’incidenti e la sorveglianza sanitaria e la formazione e informazione", "solo le visite mediche"], correct: 1 },
+			{ q: "158. Le misure preventive e protettive più idonee per l’impiego dei prodotti fitosanitari:", a: ["sono quelle che vengono impiegate nelle aziende agricole della provincia di residenza", "sono quelle conseguenti alla valutazione del rischio chimico della propria azienda", "sono quelle che vengono richieste dai lavoratori"], correct: 1 },
+			{ q: "159. Chi è abilitato ad effettuare le visite mediche nelle aziende agricole?", a: ["il medico scelto mediante il sistema delle prenotazioni specialistiche", "il medico curante scelto dai singoli lavoratori", "il medico competente nominato dal datore di lavoro"], correct: 2 },
+			{ q: "160. Sono obbligatorie le visite mediche nell’impiego dei prodotti fitosanitari?", a: ["sì, per i lavoratori che sono esposti ad un rischio rilevante per la salute", "sì, per tutti i lavoratori addetti alle lavorazioni agricole", "sì, ma solo per i lavoratori abilitati all’acquisto dei prodotti fitosanitari molto tossici, tossici e nocivi"], correct: 0 },
+			{ q: "161. È obbligatorio sostituire un prodotto fitosanitario pericoloso con uno meno pericoloso per la salute dei lavoratori?", a: ["sì, nel caso di un prodotto fitosanitario di pari efficacia fitosanitaria", "no, se è un prodotto fitosanitario che usano tutte le aziende agricole", "sì, solo se è descritto nella scheda di sicurezza"], correct: 0 },
+			{ q: "162. Quali sono le disposizioni in caso d’incidente o d’emergenza?", a: ["i dispositivi di protezione individuale", "le misure antincendio e di primo soccorso e le procedure da osservare in situazioni pericolose", "solo le visite mediche"], correct: 1 },
+			{ q: "163. Per effettuare i trattamenti fitosanitari in modo da soddisfare gli obblighi in materia di salute e di sicurezza sul lavoro, il lavoratore deve:", a: ["essere informato sul rispetto dell’orario di lavoro, formato a lavorare in qualsiasi circostanza atmosferica e addestrato a sopportare le fatiche", "essere informato dei rischi, formato sui rischi ed addestrato all’uso delle misure protettive", "partecipare ad un corso di informazione e di formazione dove alla sua conclusione deve apporre una firma obbligatoria sul registro di partecipazione"], correct: 1 },
+			{ q: "164. È sanzionato l’agricoltore che non esegue l’informazione, la formazione e l’addestramento dei propri lavoratori all’impiego dei prodotti fitosanitari?", a: ["no", "sì, con un’ammenda superiore a 4000 euro", "sì, ma solo se il lavoratore non è in possesso del patentino"], correct: 1 },
+			{ q: "165. È sanzionato un lavoratore che nell’impiego dei prodotti fitosanitari non rispetta l’informazione, la formazione e l’addestramento che gli ha fornito il datore di lavoro?", a: ["no", "sì, ma solo se il lavoratore non è in possesso del patentino", "sì, con un’ammenda superiore a 600 euro"], correct: 2 },
+			{ q: "166. Chi è responsabile di eventuali danni agronomici e ambientali o di intossicazione verso terzi che potrebbero verificarsi in seguito all'uso scorretto dei prodotti?", a: ["l’utilizzatore professionale che ha acquistato ed effettuato il trattamento", "chi ha venduto il prodotto", "solo chi ha effettuato l’annotazione sul registro dei trattamenti"], correct: 0 },
+			{ q: "167. Chi è responsabile di eventuali intossicazioni conseguenti al cattivo uso del DPI per la protezione delle vie respiratorie?", a: ["chi non ha cambiato il filtro del DPI e si è dimenticato di leggere attentamente la nota informativa", "chi ha venduto il prodotto fitosanitario e non ha rilasciato un attestato di conformità CE, la nota informativa e una dichiarazione di conformità CE", "il datore di lavoro e/o chi, pur informato, formato ed addestrato, ha utilizzato scorrettamente il DPI"], correct: 2 },
+			{ q: "168. È opportuno che una donna in gravidanza od in allattamento od un giovane di età inferiore a 18 anni collabori ai trattamenti con prodotti fitosanitari?", a: ["sì", "sì, se si è provvisti di DPI", "no, in nessun caso"], correct: 2 },
+			{ q: "169. È vietato che una donna in gravidanza o fino a sette mesi dopo il parto od un giovane di età inferiore a 18 anni collabori ai trattamenti con prodotti fitosanitari tossici acuti di categoria 1, 2, 3?", a: ["sì", "no, se si è provvisti di DPI", "no"], correct: 0 },
+			{ q: "170. È sanzionato il datore di lavoro che non fa eseguire le visite mediche obbligatorie ai propri lavoratori che impiegano i prodotti fitosanitari?", a: ["no", "sì, ma solo se il lavoratore non è in possesso del patentino", "sì, qualora il lavoratore sia esposto ad un rischio rilevante per la salute"], correct: 2 },
+			{ q: "171. Sono sanzionati i datori di lavoro che non adempiono agli obblighi in materia di tutela della salute e sicurezza sul lavoro relativi al contratto d’appalto o al contratto d’opera fra l’agricoltore e le imprese appaltatrici o i contoterzisti?", a: ["no", "sì, penalmente", "sì, ma solo se il lavoratore non è in possesso del patentino"], correct: 1 },
+			{ q: "172. Cosa deve verificare un agricoltore che affida i trattamenti fitosanitari ad un contoterzista?", a: ["almeno l’iscrizione alla Camera di commercio, il possesso del patentino e del tesserino di riconoscimento", "almeno l’iscrizione ad una associazione di categoria", "che non abbia avuto condanne penali passate in giudicato"], correct: 0 },
+			{ q: "173. Un agricoltore che affida i trattamenti fitosanitari ad un contoterzista deve opportunamente:", a: ["consegnare un elenco di comportamenti corretti da eseguire sempre nella propria azienda", "predisporre e concordare un adeguato contratto d’appalto", "richiedere un’autocertificazione dove venga evidenziata un’elevata capacità professionale"], correct: 1 },
+			{ q: "174. Chi è responsabile di un impiego dei prodotti fitosanitari non conforme all’etichettatura presente nelle confezioni?", a: ["l’utilizzatore professionale di prodotti fitosanitari in possesso del patentino per l’acquisto e l’utilizzo", "il proprietario dell’azienda agricola nel caso in cui non siano rispettati i limiti massimi di residuo", "il rivenditore di prodotti fitosanitari"], correct: 0 },
+			{ q: "175. L’impiego dei prodotti fitosanitari può causare danni all’ambiente?", a: ["no, se il prodotto non è molto tossico", "sì, può contaminare il suolo, l’aria, le acque superficiali e sotterranee", "no, se in azienda non vi sono corpi idrici superficiali"], correct: 1 },
+			{ q: "176. Gli imballaggi dei prodotti fitosanitari possono essere utilizzati per altri scopi?", a: ["sì, solo quelli dei prodotti meno pericolosi", "no, mai", "sì purché non siano adibiti a contenere sostanze alimentari"], correct: 1 },
+			{ q: "177. I contenitori usati dei prodotti fitosanitari possono essere immessi nei cassonetti dei rifiuti urbani?", a: ["sì", "no", "solo nei Comuni dove sono presenti gli inceneritori"], correct: 1 },
+			{ q: "178. È consentito abbandonare o disperdere i contenitori vuoti di prodotti fitosanitari?", a: ["no, in nessun caso", "sì, ma solo in attesa di interrarli", "sì, purché lontano da sorgenti o corsi d'acqua"], correct: 0 },
+			{ q: "179. I contenitori dei prodotti fitosanitari dopo l'uso debbono essere:", a: ["puliti e riutilizzati per altri scopi", "sotterrati in luogo lontano dall'abitazione", "bonificati e custoditi in luogo non accessibile ai non addetti ai lavori, in attesa di essere conferiti o ritirati per il loro trattamento"], correct: 2 },
+			{ q: "180. Quali rischi possono provenire dai contenitori vuoti dei prodotti fitosanitari?", a: ["nessuno, se il contenitore è di materiale non infiammabile", "intossicazioni a chi viene in contatto con essi e inquinamento delle acque e del suolo", "solo un deturpamento del paesaggio"], correct: 1 },
+			{ q: "181. Cosa occorre fare dei recipienti vuoti dei prodotti fitosanitari?", a: ["buttarli nelle immondizie avvisando l'azienda municipale dell'igiene urbana", "distruggerli, bruciandoli o interrandoli, e darne comunicazione all'Unità Sanitaria Locale e all’ARPA", "bonificarli e conferirli ai depositi appositamente attrezzati"], correct: 2 },
+			{ q: "182. Come devono essere gestiti i contenitori di prodotti fitosanitari non bonificati?", a: ["immessi nei cassonetti dei rifiuti urbani", "conferiti a, o ritirati, da trasportatori iscritti all'Albo Nazionale Gestori Ambientali", "sotterrati in luoghi isolati"], correct: 1 },
+			{ q: "183. I prodotti fitosanitari non più utilizzabili come devono essere gestiti?", a: ["sotterrandoli in un luogo lontano da abitazioni", "conferendoli a, o facendoli ritirare, da trasportatori iscritti all'Albo Nazionale Gestori Ambientali", "riversandoli nel corso d'acqua più vicino"], correct: 1 },
+			{ q: "184. Quale tra quelli elencati è un corretto modo di bonificare i contenitori vuoti dei prodotti fitosanitari?", a: ["almeno tre risciacqui consecutivi con acqua", "svuotare accuratamente il contenitore versando tutto il prodotto fitosanitario nel mezzo irrorante e avvitare bene il tappo", "almeno un risciacquo con acqua"], correct: 0 },
+			{ q: "185. Cosa occorre fare dell’acqua di lavaggio derivante dalla bonifica dei contenitori vuoti di prodotti fitosanitari?", a: ["deve essere scaricata per terra, avendo cura di non bagnarsi con eventuali schizzi", "deve essere versata nella miscela preparata per effettuare il trattamento", "è possibile scaricarla in fognatura"], correct: 1 },
+			{ q: "186. Cosa si intende per organismi non bersaglio?", a: ["tutti gli insetti che muoiono a seguito di un trattamento insetticida", "sono gli organismi raggiunti dai prodotti con attività sistemica", "le specie animali e vegetali, terresti o acquatiche, che possono subire, in modo diretto o indiretto, qualsiasi forma di condizionamento a seguito della distribuzione di un prodotto fitosanitario"], correct: 2 },
+			{ q: "187. Quali sono le modalità attraverso le quali i prodotti fitosanitari si disperdono nell’ambiente?", a: ["deriva, volatilità, ruscellamento e lisciviazione", "contatto, asfissia e ingestione", "solo con la bruciatura dei contenitori vuoti non bonificati"], correct: 0 },
+			{ q: "188. Quando in etichetta è riportata una fascia di rispetto di 30 metri dai corpi idrici occorre:", a: ["non avere un pozzo con acqua potabile nel raggio di 30 metri rispetto al punto di preparazione della miscela", "rispettarla scrupolosamente come misura di mitigazione del rischio, lasciando una fascia non trattata di almeno 30 metri fra la coltura e un corpo idrico", "eseguire il trattamento solo con vento in direzione opposta al corpo idrico"], correct: 1 },
+			{ q: "189. Per tutelare gli organismi non bersaglio di interesse agricolo (es. api) è necessario:", a: ["rispettare scrupolosamente eventuali vincoli applicativi riportati in etichetta", "utilizzare i prodotti insetticidi alla dose più bassa riportata in etichetta durante la fioritura", "dare la preferenza ai prodotti di copertura"], correct: 0 },
+			{ q: "190. Nelle aree molto sensibili o “specifiche” è sempre vietato l’uso dei prodotti fitosanitari”?", a: ["nelle aree specifiche il loro uso è sempre vietato", "nelle aree specifiche il loro uso non è mai vietato", "nelle aree specifiche il loro uso, in determinati casi, può essere vietato o ridotto al minimo"], correct: 2 },
+			{ q: "191. Di cosa si deve tenere conto per la tutela delle aree specifiche?", a: ["della salute umana, dell’ambiente e della biodiversità e dei risultati dell’analisi del rischio", "della salute umana e dell’ambiente e della biodiversità", "della salute umana e dei risultati dell’analisi del rischio"], correct: 0 },
+			{ q: "192. Come sono definiti i “metodi non chimici” dalla Direttiva 2009/128/CE sull’utilizzo sostenibile dei pesticidi?", a: ["la Direttiva, all’articolo 3, punto 8), identifica i «metodi non chimici» come metodi biologici di controllo dei parassiti", "la Direttiva, all’articolo 3, punto 8), identifica i «metodi non chimici» come metodi meccanici di controllo dei parassiti", "la Direttiva, all’articolo 3, punto 8), identifica i «metodi non chimici» come metodi alternativi ai pesticidi chimici sulla base di tecniche agronomiche o sistemi fisici, meccanici o biologici di controllo dei parassiti"], correct: 2 },
+			{ q: "193. Quali sono i Siti che formano la Rete Natura 2000?", a: ["le Zone Speciali di Conservazione (ZSC), ora ancora SIC, e le Zone di Protezione Speciale (ZPS)", "le Zone Speciali di Conservazione (ZSC), ora ancora SIC, le Zone di Protezione Speciale (ZPS) e le Riserve naturali", "le Zone Speciali di Conservazione (ZSC), ora ancora SIC, le Zone di Protezione Speciale (ZPS) e i Parchi regionali e nazionali"], correct: 0 },
+			{ q: "194. Cos’è la valutazione di incidenza o VINCA?", a: ["è un procedimento facoltativo per i Piani, i progetti o anche i singoli interventi che possono avere incidenza significativa sulla conservazione degli habitat e delle specie animali e vegetali presenti in un Sito della Rete Natura 2000", "è un procedimento obbligatorio per tutti gli interventi che si realizzano in un Sito della Rete Natura 2000", "è un procedimento obbligatorio per i Piani, i progetti o anche i singoli interventi che possono avere incidenza significativa sulla conservazione degli habitat e delle specie animali e vegetali presenti in un Sito della Rete Natura 2000"], correct: 2 }
+		];
+		
+		// Aggiunge l'indice originale a ogni domanda per non perderlo col shuffle
+		allQuestions.forEach((q, i) => q.originalIndex = i);
+
+		const strutturaManuale = [
+			{
+				id: 1,
+				titolo: "I prodotti fitosanitari e i metodi di lotta",
+				colore: "#fec670",
+				unita: [
+					{ nome: "UNITÀ 1", titolo: "Le caratteristiche tecniche dei prodotti fitosanitari e dei coadiuvanti", colore: "#ffe165" },
+					{ nome: "UNITÀ 2", titolo: "I metodi di difesa fitosanitaria", colore: "#ffe165" }
+				]
+			},
+			{
+				id: 2,
+				titolo: "Sistemi di sicurezza per l'acquisto, la conservazione, il trasporto e l'utilizzo dei prodotti fitosanitari",
+				colore: "#94f2a9",
+				unita: [
+					{ nome: "UNITÀ 1", titolo: "La valutazione di pericolosità dei prodotti fitosanitari", colore: "#dfff82" },
+					{ nome: "UNITÀ 2", titolo: "Norme per l'acquisto, il trasporto, la conservazione e l'impiego dei prodotti fitosanitari", colore: "#dfff82" },
+					{ nome: "UNITÀ 3", titolo: "Effetti sulla salute e modalità di prevenzione", colore: "#dfff82" }
+				]
+			},
+			{
+				id: 3,
+				titolo: "I rischi e le precauzioni per l'ambiente",
+				colore: "#9ab1ff",
+				unita: [
+					{ nome: "UNITÀ 1", titolo: "Gestione dei rifiuti dei trattamenti", colore: "#99cdff" },
+					{ nome: "UNITÀ 2", titolo: "Effetti sugli organismi non bersaglio", colore: "#99cdff" },
+					{ nome: "UNITÀ 3", titolo: "Tutela della biodiversità in aree protette e rete Natura 2000", colore: "#99cdff" }
+				]
+			}
+		];
+
+		// Placeholder per capitoli (da personalizzare)
+		function getInfoStudio(index) {
+			const n = index + 1;
+
+			// --- INTRO ---
+			if (n <= 5) return { modulo: "INTRO", titoloModulo: "Il Patentino", modCol: "#bdc3c7", unita: "INFO", titoloUnita: "A cosa serve", uniCol: "#ecf0f1", da: 1, a: 5 };
+
+			let config;
+			// --- MAPPA INTERVALLI (Intervallo fisso come richiesto) ---
+			if (n >= 6 && n <= 16)    config = { m:0, u:0, p1:2, p2:8 };
+			if (n >= 17 && n <= 21)   config = { m:0, u:0, p1:9, p2:10 };
+			if (n >= 22 && n <= 25)   config = { m:0, u:0, p1:11,p2:13 };
+			if (n >= 26 && n <= 35)   config = { m:0, u:0, p1:14,p2:19 };
+			if (n >= 36 && n <= 37)   config = { m:0, u:0, p1:20,p2:26 };
+			if (n >= 38 && n <= 41)   config = { m:0, u:0, p1:26,p2:28 };
+			if (n >= 42 && n <= 43)   config = { m:0, u:0, p1:29,p2:33 };
+			if (n >= 44 && n <= 50)   config = { m:0, u:0, p1:33,p2:39 };
+
+			if (n >= 51 && n <= 59)   config = { m:0, u:1, p1:2, p2:14 };
+
+			if (n >= 60 && n <= 74)   config = { m:1, u:0, p1:2, p2:31 };
+			if (n >= 75 && n <= 84)   config = { m:1, u:0, p1:31,p2:41 };
+			if (n >= 85 && n <= 94)   config = { m:1, u:0, p1:41,p2:44 };
+
+			if (n >= 95 && n <= 96)   config = { m:1, u:1, p1:2, p2:4 };
+			if (n >= 97 && n <= 101)  config = { m:1, u:1, p1:4, p2:7 };
+			if (n >= 102 && n <= 105) config = { m:1, u:1, p1:8, p2:14 };
+			if (n >= 106 && n <= 116) config = { m:1, u:1, p1:15,p2:23 };
+			if (n >= 117 && n <= 121) config = { m:1, u:1, p1:25,p2:32 };
+			if (n >= 122 && n <= 124) config = { m:1, u:1, p1:33,p2:37 };
+			if (n >= 125 && n <= 127) config = { m:1, u:1, p1:38,p2:41 };
+
+			if (n >= 128 && n <= 136) config = { m:1, u:2, p1:2, p2:5 };
+			if (n >= 137 && n <= 155) config = { m:1, u:2, p1:7, p2:24 };
+			if (n >= 156 && n <= 174) config = { m:1, u:2, p1:27,p2:45 };
+
+			if (n >= 175 && n <= 185) config = { m:2, u:0, p1:2, p2:10 };
+			if (n >= 186 && n <= 189) config = { m:2, u:1, p1:2, p2:11 };
+			if (n >= 190 && n <= 194) config = { m:2, u:2, p1:2, p2:10 };
+
+			if (!config) return null;
+
+			const mod = strutturaManuale[config.m];
+			const uni = mod.unita[config.u];
+
+			return {
+				modulo: "MODULO " + mod.id,
+				titoloModulo: mod.titolo,
+				modCol: mod.colore,
+				unita: uni.nome,
+				titoloUnita: uni.titolo,
+				uniCol: uni.colore,
+				da: config.p1,
+				a: config.p2
+			};
+		}
+
+		let currentMode = '';
+		let activeQuestions = [];
+		let answersGiven = {};
+		let timerInterval = null;
+		let timeRemaining = 0;
+		let esameFinito = false;
+
+		function mostraSuggerimento(originalIdx, currentIdx) {
+			// Usiamo currentIdx per trovare il box nel DOM
+			const box = document.getElementById(`q-box-${currentIdx}`);
+			const esistente = box.querySelector('.hint-text');
+			
+			if (esistente) { 
+				esistente.remove(); 
+				return; 
+			}
+
+			const info = getInfoStudio(originalIdx);
+			if (!info) return;
+
+			const hintDiv = document.createElement('div');
+			hintDiv.className = 'hint-text';
+			
+			hintDiv.innerHTML = `
+				<div class="row-modulo" style="background: ${info.modCol};">
+					<div class="label-box" style="text-transform: uppercase; font-weight: bold;">${info.modulo}</div> 
+					<div class="desc-box" style="font-weight: bold;">${info.titoloModulo || ''}</div>
+				</div>
+				<div class="row-unita" style="background: ${info.uniCol};">
+					<div class="label-box" style="text-transform: uppercase; font-weight: bold;">${info.unita}</div> 
+					<div class="desc-box" style="font-weight: bold;">${info.titoloUnita || ''}</div>
+				</div>
+				<div class="info-pagine-box">
+					📖 Da pagina <strong>${info.da}</strong> a pagina <strong>${info.a}</strong> del manuale
+				</div>
+			`;
+			
+			box.appendChild(hintDiv);
+		}
+		
+
+		function startQuiz(mode) {
+			// 1. CONTROLLO PREVENTIVO (Solo per modalità errori)
+			if (mode === 'errors') {
+				const ids = JSON.parse(localStorage.getItem('quiz_errori') || "[]");
+				if (ids.length === 0) {
+					alert("Il tuo salvadanaio è vuoto! Sbaglia qualche domanda per riempirlo. 🚜");
+					return; // Esce e resta sulla Home
+				}
+			}
+
+			updateScrollIndex(mode); // Nasconde/mostra i pallini in base alla modalità
+			if(timerInterval) clearInterval(timerInterval);
+			currentMode = mode;
+			answersGiven = {};
+			esameFinito = false;
+			
+			document.getElementById('home-screen').classList.add('hidden');
+			document.getElementById('quiz-header').classList.remove('hidden');
+			document.getElementById('quiz-container').innerHTML = '';
+			document.getElementById('restart-btn').classList.remove('glow');
+			
+			// Reset Badge
+			document.getElementById('badge-e').classList.remove('hidden');
+			document.getElementById('badge-s').classList.remove('hidden');
+			document.getElementById('timer-box').classList.add('hidden');
+			document.getElementById('prog-cont').classList.remove('hidden');
+			document.getElementById('submit-exam').classList.add('hidden');
+
+			if (mode === 'all') {
+				activeQuestions = [...allQuestions];
+				document.getElementById('mode-title').innerText = "Tutte le domande";
+			} 
+			else if (mode === 'mod1') {
+				activeQuestions = allQuestions.filter(q => {
+					const info = getInfoStudio(q.originalIndex);
+					return info && info.modulo === "MODULO 1";
+				});
+				document.getElementById('mode-title').innerText = "Modulo 1";
+			}
+			else if (mode === 'mod2') {
+				activeQuestions = allQuestions.filter(q => {
+					const info = getInfoStudio(q.originalIndex);
+					return info && info.modulo === "MODULO 2";
+				});
+				document.getElementById('mode-title').innerText = "Modulo 2";
+			}
+			else if (mode === 'mod3') {
+				activeQuestions = allQuestions.filter(q => {
+					const info = getInfoStudio(q.originalIndex);
+					return info && info.modulo === "MODULO 3";
+				});
+				document.getElementById('mode-title').innerText = "Modulo 3";
+			}
+			else if (mode === 'errors') {
+				const ids = JSON.parse(localStorage.getItem('quiz_errori') || "[]");
+				activeQuestions = allQuestions.filter(q => ids.includes(q.originalIndex));
+				document.getElementById('mode-title').innerText = "Errori Frequenti";
+				
+				// Personalizziamo il tasto reset
+				const rb = document.getElementById('restart-btn');
+				rb.innerHTML = "🗑️ Reset";
+				rb.onclick = resetErrori;
+			}
+			else if (mode === 'rand') {
+				const n = parseInt(document.getElementById('rand-num').value) || 20;
+				activeQuestions = shuffle([...allQuestions]).slice(0, n);
+				document.getElementById('mode-title').innerText = "Quiz Casuale";
+			} 
+			else if (mode === 'exam') {
+				activeQuestions = shuffle([...allQuestions]).slice(0, DOMANDE_ESAME);
+				document.getElementById('mode-title').innerText = "Esame";
+				document.getElementById('badge-e').classList.add('hidden');
+				document.getElementById('badge-s').classList.add('hidden');
+				document.getElementById('prog-cont').classList.add('hidden');
+				document.getElementById('timer-box').classList.remove('hidden');
+				document.getElementById('submit-exam').classList.remove('hidden');
+				initTimer();
+			}
+
+			renderQuestions();
+			updateStats();
+			window.scrollTo(0,0);
+		}
+		function renderQuestions() {
+			const container = document.getElementById('quiz-container');
+			activeQuestions.forEach((q, idx) => {
+				const qBox = document.createElement('div');
+				qBox.className = 'question-box';
+				qBox.id = `q-box-${idx}`;
+				const title = (currentMode === 'exam') ? (idx + 1) + ". " + q.q.replace(/^\d+\.\s*/, '') : "● " + q.q;
+
+				qBox.innerHTML = `
+					<div class="q-header">
+						<div class="q-text">${title}</div>
+						${currentMode !== 'exam' ? `<div class="hint-btn" onclick="mostraSuggerimento(${q.originalIndex}, ${idx})">ⓘ</div>` : ''}
+					</div>
+					<div class="options">
+						${q.a.map((opt, i) => `<button class="option-btn" onclick="selectOption(${idx}, ${i})">${String.fromCharCode(97 + i)}) ${opt.charAt(0).toUpperCase() + opt.slice(1)}</button>`).join('')}
+					</div>
+				`;
+				container.appendChild(qBox);
+			});
+		}
+
+		function selectOption(qIdx, optIdx) {
+			if (esameFinito || (currentMode !== 'exam' && answersGiven[qIdx] !== undefined)) return;
+			document.getElementById(`q-box-${qIdx}`).classList.remove('missing-answer');
+			const buttons = document.querySelectorAll(`#q-box-${qIdx} .option-btn`);
+			
+			if (currentMode === 'exam') {
+				buttons.forEach(b => b.classList.remove('selected-exam'));
+				buttons[optIdx].classList.add('selected-exam');
+				answersGiven[qIdx] = optIdx;
+				updateStats();
+			} else {
+				answersGiven[qIdx] = optIdx;
+				const isCorrect = optIdx === activeQuestions[qIdx].correct;
+				gestisciErrore(qIdx, isCorrect);
+				buttons[optIdx].classList.add(isCorrect ? 'correct' : 'wrong');
+				if(!isCorrect) buttons[activeQuestions[qIdx].correct].classList.add('correct');
+				document.getElementById(`q-box-${qIdx}`).classList.add('fade');
+				updateStats();
+				const next = document.getElementById(`q-box-${qIdx + 1}`);
+				if (next) setTimeout(() => next.scrollIntoView({ behavior:'smooth', block:'center' }), 600);
+			}
+		}
+
+		function updateStats() {
+			const total = activeQuestions.length;
+			const answered = Object.keys(answersGiven).length;
+			if(currentMode !== 'exam' || esameFinito) {
+				let e = 0, s = 0;
+				Object.keys(answersGiven).forEach(k => { if(answersGiven[k] === activeQuestions[k].correct) e++; else s++; });
+				document.getElementById('badge-e').innerText = `Esatte: ${e}`;
+				document.getElementById('badge-s').innerText = `Sbagliate: ${s}`;
+				if(currentMode !== 'exam') {
+					const bar = document.getElementById('progress-bar');
+					bar.style.width = (answered/total*100) + "%";
+					if (answered > 0) {
+						const p = (e / answered) * 100;
+						bar.style.background = p < 60 ? "var(--wrong)" : p < 80 ? "#f1c40f" : "var(--correct)";
+					}
+				}
+			}
+			document.getElementById('badge-r').innerText = `Risposte: ${answered}/${total}`;
+		}
+
+		function consegnaEsame() {
+			const total = activeQuestions.length;
+			const answeredCount = Object.keys(answersGiven).length;
+
+			// 1. Controllo domande mancanti
+			if (answeredCount < total) {
+				let m = []; 
+				// Rimuoviamo eventuali lampeggiamenti precedenti
+				document.querySelectorAll('.question-box').forEach(b => b.classList.remove('missing-answer'));
+
+				for(let i=0; i<total; i++) {
+					if(answersGiven[i] === undefined) {
+						m.push(i+1);
+						// Aggiungiamo l'effetto visivo al box mancante
+						document.getElementById(`q-box-${i}`).classList.add('missing-answer');
+					}
+				}
+				
+				alert("Mancano le risposte: " + m.join(", "));
+				
+				const primaMancanteIdx = m[0] - 1; 
+				const target = document.getElementById(`q-box-${primaMancanteIdx}`);
+				if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				return;
+			}
+
+			// 2. Conferma consegna
+			if(!confirm("Sei sicuro? Se consegni non potrai più cambiare le risposte.")) return;
+			
+			// 3. Logica fine esame
+			clearInterval(timerInterval);
+			esameFinito = true;
+			document.getElementById('submit-exam').classList.add('hidden');
+			document.getElementById('restart-btn').classList.add('glow');
+			
+			let c = 0;
+			activeQuestions.forEach((q, idx) => {
+				const u = answersGiven[idx];
+				const b = document.querySelectorAll(`#q-box-${idx} .option-btn`);
+				
+				// Rimuovo il blu dell'esame
+				if(b[u]) b[u].classList.remove('selected-exam');
+				
+				if(u === q.correct) { 
+					if(b[u]) b[u].classList.add('correct'); 
+					c++; 
+					gestisciErroreEsame(q.originalIndex, true); 
+				} else { 
+					if(b[u]) b[u].classList.add('wrong'); 
+					if(b[q.correct]) b[q.correct].classList.add('correct'); 
+					gestisciErroreEsame(q.originalIndex, false);
+				}
+				document.getElementById(`q-box-${idx}`).classList.add('fade');
+			});
+			
+			alert((c >= MIN_PROMOSSO ? "PROMOSSO! 🎉" : "BOCCIATO ❌") + "\nHai risposto correttamente a " + c + " su " + total);
+			
+			// Mostro i badge dei risultati che erano nascosti
+			document.getElementById('badge-e').classList.remove('hidden');
+			document.getElementById('badge-s').classList.remove('hidden');
+			updateStats();
+		}
+
+		function initTimer() {
+			timeRemaining = MINUTI_ESAME * 60;
+			timerInterval = setInterval(() => {
+				timeRemaining--;
+				let m = Math.floor(timeRemaining / 60), s = timeRemaining % 60;
+				document.getElementById('timer-box').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+				if(timeRemaining <= 0) { clearInterval(timerInterval); alert("Tempo scaduto!"); consegnaEsame(); }
+			}, 1000);
+		}
+
+		function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+		
+		function goHome(force = false) {
+			// 1. Ferma il timer se attivo
+			if (timerInterval) clearInterval(timerInterval);
+			
+			// 2. Controllo se uscire (solo se il quiz è in corso e non è finito)
+			if (!force && !esameFinito && currentMode !== 'errors' && Object.keys(answersGiven).length > 0) {
+				if (!confirm("Il quiz è in corso. Vuoi tornare alla home e perdere i progressi?")) return;
+			}
+
+			// 3. Reset variabili logiche per il prossimo quiz
+			answersGiven = {};
+			activeQuestions = [];
+			currentMode = '';
+			esameFinito = false;
+
+			// 4. Ripristino dei bottoni e dell'interfaccia
+			const rb = document.getElementById('restart-btn');
+			if(rb) {
+				rb.innerHTML = "🔄 Rinizia";
+				rb.classList.remove('glow');
+				rb.onclick = restartQuiz;
+			}
+			document.getElementById('progress-bar').style.width = '0%';
+			document.getElementById('badge-r').innerText = "Risposte: 0/0";
+			
+			// 5. Cambio schermata
+			document.getElementById('scroll-index').classList.add('hidden-index');
+			document.getElementById('quiz-header').classList.add('hidden');
+			document.getElementById('prog-cont').classList.add('hidden');
+			document.getElementById('quiz-container').innerHTML = '';
+			document.getElementById('home-screen').classList.remove('hidden');
+			
+			window.scrollTo(0,0); 
+		}
+
+		function restartQuiz() { 
+			if (Object.keys(answersGiven).length > 0 && !esameFinito && currentMode !== 'errors') {
+				if (!confirm("Vuoi riniziare il quiz attuale?")) return;
+			}
+			startQuiz(currentMode); 
+		}
+
+		// Funzione per saltare alla domanda specifica
+		function jumpTo(n) {
+			const target = document.getElementById(`q-box-${n-1}`);
+			if (target) {
+				// Calcoliamo l'offset per non finire sotto l'header (160px)
+				const headerOffset = 160;
+				const elementPosition = target.getBoundingClientRect().top;
+				const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+				window.scrollTo({
+					top: offsetPosition,
+					behavior: 'smooth'
+				});
+			}
+		}
+
+		// Funzione per mostrare/nascondere la barra
+		function updateScrollIndex(mode) {
+			const bar = document.getElementById('scroll-index');
+			if (mode === 'all') {
+				bar.classList.remove('hidden-index');
+			} else {
+				bar.classList.add('hidden-index');
+			}
+		}
+
+		document.getElementById('rand-num').addEventListener('wheel', function(e) {
+			// Se l'input ha il focus (ci hai cliccato dentro)
+			if (document.activeElement === this) {
+				// Blocca lo scroll della pagina esterna
+				e.preventDefault();
+				
+				// Cambia il numero manualmente in base alla rotellina
+				let val = parseInt(this.value) || 0;
+				if (e.deltaY < 0) {
+					this.value = val + 1; // Ruota su -> aumenta
+				} else {
+					if (val > 1) this.value = val - 1; // Ruota giù -> diminuisci
+				}
+			}
+		}, { passive: false });
+
+		function toggleDarkMode() {
+			const isDark = document.body.classList.toggle('dark-mode');
+			localStorage.setItem('theme', isDark ? 'dark' : 'light');
+		}
+
+		function gestisciErrore(qIdx, corretto) {
+			let errori = JSON.parse(localStorage.getItem('quiz_errori') || "[]");
+			const originalIdx = activeQuestions[qIdx].originalIndex;
+
+			if (!corretto) {
+				if (!errori.includes(originalIdx)) errori.push(originalIdx);
+			} else {
+				errori = errori.filter(id => id !== originalIdx);
+			}
+			
+			localStorage.setItem('quiz_errori', JSON.stringify(errori));
+			aggiornaContatoreErrori();
+		}
+
+		function gestisciErroreEsame(originalIdx, corretto) {
+			let errori = JSON.parse(localStorage.getItem('quiz_errori') || "[]");
+
+			if (!corretto) {
+				if (!errori.includes(originalIdx)) errori.push(originalIdx);
+			} else {
+				errori = errori.filter(id => id !== originalIdx);
+			}
+			
+			localStorage.setItem('quiz_errori', JSON.stringify(errori));
+			aggiornaContatoreErrori(); 
+		}
+
+		function aggiornaContatoreErrori() {
+			const errori = JSON.parse(localStorage.getItem('quiz_errori') || "[]");
+			const badge = document.getElementById('error-count');
+			if (errori.length > 0) {
+				badge.innerText = errori.length;
+				badge.style.display = 'block';
+			} else {
+				badge.style.display = 'none';
+			}
+		}
+
+		function resetErrori() {
+			if(confirm("Vuoi svuotare il salvadanaio degli errori?")) {
+				localStorage.setItem('quiz_errori', "[]");
+				aggiornaContatoreErrori();
+				window.scrollTo(0,0);
+				goHome(true);
+			}
+		}
+		
+		console.log("%c🚜 Quiz Patentino %cby LuxR & Gemini AI", 
+			"color: #e67e22; font-weight: bold; font-size: 16px;", 
+			"color: #2980b9; font-weight: bold;");
+		console.log("Materiale didattico tratto dal sito della Regione Emilia-Romagna");
+
+	</script>
+</body>
+</html>
