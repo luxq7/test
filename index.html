@@ -45,14 +45,26 @@
 
 		/* HEADER PIÙ ALTO E SPAZIOSO */
 		header { 
-			background: #fff; border-bottom: 1px solid #ddd; 
-			position: fixed; top: 0; width: 100%; z-index: 1000;
+			background: #fff; 
+			border-bottom: 1px solid #ddd; 
+			position: sticky; 
+			top: 0; 
+			width: 100%; 
+			z-index: 1000;
 			box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-			height: 110px; 
+			height: auto !important; /* Forza l'header a stringersi attorno ai pulsanti */
 		}
 		.header-content { 
-			max-width: 1200px; margin: 0 auto; height: 100%;
-			display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+			max-width: 1200px; 
+			margin: 0 auto; 
+			height: 100%;
+			display: flex; 
+			justify-content: space-between; 
+			align-items: center; 
+			
+			min-height: 125px;
+			padding: 12px 20px;
+			box-sizing: border-box;
 		}
 
 		.h-left { display: flex; gap: 10px; flex: 1; }
@@ -69,7 +81,15 @@
 		.bg-wrong { background: var(--wrong); }
 		.bg-neutral { background: #7f8c8d; }
 
-		.progress-container { position: fixed; top: 110px; width: 100%; height: 8px; background: #eee; z-index: 999; }
+		.progress-container { 
+			width: 100%; 
+			height: 8px; 
+			background: #eee; 
+			z-index: 999;
+			position: relative; /* Prende lo spazio subito sotto l'ultimo elemento dell'header */
+			top: 0;
+		}
+
 		#progress-bar { height: 100%; width: 0%; background: #95a5a6; transition: all 0.5s ease; }
 
 		#home-screen {
@@ -145,7 +165,8 @@
 		}
 		
 		/* DOMANDE PIÙ GRANDI */
-		#quiz-container { max-width: 850px; margin: 150px auto 80px; padding: 0 20px; }
+		#quiz-container { max-width: 850px; margin: 20px auto 80px; padding: 0 20px; }
+
 		.question-box { background: white; padding: 30px; margin-bottom: 30px; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border-left: 6px solid transparent; }
 		.question-box.fade { opacity: 0.6; pointer-events: none; }
 		.question-box.fade .hint-btn { pointer-events: auto; }
@@ -304,44 +325,96 @@
 			overflow: hidden;
 		}
 
+		@media (max-width: 850px) {
+			.header-content { 
+				flex-wrap: wrap; 
+			}
+			/* Forza il timer a scendere sotto al centro occupando tutta la riga */
+			.h-center { 
+				flex-basis: 100%; 
+				order: 3; 
+				margin-top: 10px; 
+				display: flex;
+				justify-content: center;
+			}
+			/* Mantiene i bottoni a sinistra e i badge a destra grandi sulla prima riga */
+			.h-left { order: 1; }
+			.h-right { order: 2; }
+		}
+
+		@media (min-width: 601px) and (max-width: 850px) {
+			.header-content { flex-wrap: wrap; }
+			.h-center { 
+				order: 3; 
+				flex-basis: 100%; 
+				margin-top: 10px; 
+				display: flex;
+				justify-content: center;
+			}
+			.h-left { order: 1; }
+			.h-right { order: 2; }
+		}
+
 		@media (max-width: 600px) {
-			header { height: 140px; }
-			.header-content { flex-wrap: wrap; padding: 10px; }
+			.header-content { flex-wrap: wrap; padding: 8px 10px; }
 			.h-left { order: 1; } .h-right { order: 2; }
-			.h-center { order: 3; flex-basis: 100%; margin-top: 10px; }
-			.progress-container { top: 140px; }
-			#quiz-container { margin-top: 180px; margin-bottom: 100px; }
+			
+			/* 🚀 Il timer si prende tutta la riga sotto e si centra */
+			.h-center { 
+				order: 3; 
+				flex-basis: 100%; 
+				margin-top: 10px; 
+				display: flex;
+				justify-content: center;
+			}
+			
+			#quiz-container { margin-top: 20px; margin-bottom: 100px; }
+
 			.menu-card {
-				margin-bottom: 30px; /* Quel tanto che basta per dare respiro su mobile */
+				margin-bottom: 30px; 
 			}
 
 			footer { padding: 20px 10px; font-size: 0.75rem; }
 
 			#submit-container {
-				bottom: 42px; /* Più basso per non coprire troppo le domande su schermi piccoli */
-				right: 15px;  /* Più vicino al bordo del telefono */
+				bottom: 42px; 
+				right: 15px;  
 				left: auto;
 			}
 			#submit-exam {
 				width: 55px;  
 				height: 55px;
 				font-size: 2rem;
-				border: 2px solid white; /* Bordo un pelo più sottile per il cerchio da 55px */
+				border: 2px solid white; 
 			}
 			#submit-exam:hover {
-				background: #e67e22; /* Torna al colore originale invece di restare scuro */
+				background: #e67e22; 
 				transform: rotate(-25deg) scale(1); 
 			}
 			#submit-exam:active {
 				transform: rotate(-25deg) scale(0.9);
 			}
+			
+			/* 🚀 I tasti Home e Rinizia tornano a diventare quadrati e compatti */
 			.h-left { 
-				gap: 5px; /* Riduce lo spazio tra i tasti per farceli stare tutti e tre */
+				gap: 5px; 
 			}
 			.h-left .btn {
-				padding: 8px 10px; /* Li rimpicciolisce un pelo solo su telefono */
+				padding: 8px 10px; 
 				font-size: 0.9em;
 			}
+			
+			.h-right {
+				align-items: flex-end;
+				gap: 4px;
+			}
+			
+			/* Il titolo rimane grande e visibile */
+			.mode-title {
+				font-size: 1.1em; 
+			}
+			
+			/* 🚀 RIMOSSI I RIMPICCIOLIMENTI: I badge rimangono grandi come su PC */
 		}
 
 		/* Barra laterale per lo scroll veloce */
@@ -490,17 +563,202 @@
 			border-color: #600;
 		}
 
+		/* ============================================================================
+		   STILI ESCLUSIVI - MODALITÀ CECI
+		   ============================================================================ */
+
+		/* 1. PULSANTI E SELEZIONE NELLA SCHERMATA INIZIALE (HOME) */
+		.btn-ceci {
+			width: 100%;
+			padding: 16px;
+			color: white;
+			border: none;
+			border-radius: 12px;
+			margin-top: 15px;
+			cursor: pointer;
+			font-weight: bold;
+			font-size: 1.1em;
+			background: #16a085; /* Colore verde acqua */
+			transition: background 0.2s, transform 0.1s;
+		}
+
+		.btn-ceci:active {
+			transform: scale(0.98);
+		}
+
+		#ceci-selection-box {
+			background: #fcfcfc;
+			border: 2px dashed #16a085;
+			border-radius: 15px;
+			padding: 15px;
+			margin-top: 15px;
+			animation: fadeIn 0.3s ease;
+		}
+
+		.ceci-grid {
+			display: grid;
+			grid-template-columns: repeat(10, 1fr); /* Esattamente 10 pallini per riga */
+			gap: 6px;
+			max-height: 220px; /* Limita l'altezza per evitare che occupi troppa pagina */
+			overflow-y: auto;  /* Scroll verticale interno */
+			padding: 8px;
+			margin-bottom: 15px;
+			border: 1px solid #ddd;
+			border-radius: 10px;
+			background: #fff;
+		}
+
+		/* Il pallino di selezione dentro la griglia della Home */
+		.ceci-select-dot {
+			width: 100%;
+			aspect-ratio: 1 / 1; /* Garantisce la forma quadrata di partenza per il cerchio */
+			border-radius: 50%;   /* Lo trasforma in un cerchio perfetto */
+			border: 2px solid #ccc;
+			background: #fff;
+			color: #333;
+			font-size: 0.8rem;
+			font-weight: bold;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			user-select: none;
+			transition: all 0.15s ease;
+			box-sizing: border-box;
+		}
+
+		/* Stato attivo del pallino nella Home (Sfondo pieno e testo bianco) */
+		.ceci-select-dot.selected {
+			background: #16a085;
+			color: white;
+			border-color: #16a085;
+		}
+
+
+		/* 2. INTERFACCIA DURANTE IL QUIZ (HEADER DEDICATO) */
+
+		/* La riga contenitore che ospita i pallini, situata sotto l'header principale */
+		#ceci-row-container {
+			width: 100%;
+			min-height: 60px; /* Altezza di sicurezza per accogliere i pallini */
+			padding: 5px 15px 10px;
+			display: flex;
+			justify-content: center; /* Centra la riga dei pallini su PC */
+			align-items: center;
+			background: #f8f9fa; /* Grigio leggero per separarlo dall'header bianco */
+			border-top: 1px solid #eee;
+			box-sizing: border-box;
+		}
+
+		/* Il vassoio scorrevole lineare all'interno della riga */
+		#ceci-header-dots {
+			display: flex !important;
+			flex-wrap: wrap !important;     /* FORZA I PALLINI ANDARE A CAPO SE FINISCE LO SPAZIO */
+			gap: 8px !important;            /* Spazio uniforme tra i pallini */
+			justify-content: center;        /* Centra i pallini nella riga */
+			align-items: center !important;
+			
+			/* --- MODIFICHE PER LA GRIGLIA FLUIDA --- */
+			max-width: 540px;               /* Larghezza ideale per contenere esattamente 10 pallini da 44px + gap */
+			width: 100% !important;
+			min-height: 48px !important;
+			
+			padding: 4px 10px;
+			box-sizing: border-box !important;
+			white-space: normal !important; /* Rimosso nowrap per permettere la discesa a capo */
+		}
+
+		/* Nasconde esteticamente la barra di scorrimento su desktop per pulizia grafica */
+		#ceci-header-dots::-webkit-scrollbar {
+			height: 4px;
+		}
+		#ceci-header-dots::-webkit-scrollbar-thumb {
+			background: rgba(0,0,0,0.15);
+			border-radius: 10px;
+		}
+
+		/* Il singolo pallino numerato all'interno dell'header di gioco */
+		.ceci-header-dot {
+			flex-shrink: 0;
+			width: 44px;    
+			height: 44px;
+			border-radius: 50%;
+			background: #ffffff;
+			color: #333333;
+			border: 2px solid #b3b3b3;
+			display: inline-flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			
+			/* --- TESTO PIÙ GRANDE E LEGGIBILE --- */
+			font-size: 0.95rem; /* Aumentato da 0.8rem per rendere i numeri molto più grandi */
+			line-height: 1.1;   /* Avvicina leggermente le due righe di testo interne */
+			
+			font-weight: bold;
+			cursor: pointer;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+			transition: transform 0.1s, box-shadow 0.1s;
+			box-sizing: border-box;
+		}
+
+		.ceci-header-dot:hover {
+			transform: scale(1.05);
+			box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+		}
+
+
+		/* 3. ADATTAMENTO E OTTIMIZZAZIONE PER COMPLETA DARK MODE */
+		body.dark-mode .btn-ceci {
+			background: #117a65; /* Sfumatura leggermente più scura del verde acqua */
+		}
+
+		body.dark-mode #ceci-selection-box {
+			background: #1e1e1e;
+			border-color: #117a65;
+		}
+
+		body.dark-mode .ceci-grid {
+			background: #121212;
+			border-color: #333;
+		}
+
+		body.dark-mode .ceci-select-dot {
+			background: #2c2c2c;
+			color: #e0e0e0;
+			border-color: #555;
+		}
+
+		body.dark-mode .ceci-select-dot.selected {
+			background: #117a65;
+			color: white;
+			border-color: #117a65;
+		}
+
+		body.dark-mode #ceci-row-container {
+			background: #1e1e1e !important;
+			border-color: #2d2d2d !important;
+		}
+
+		body.dark-mode .ceci-header-dot {
+			background: #2c2c2c !important;
+			color: #ffffff !important;
+			border-color: #555555 !important;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.4) !important;
+		}
+
+		body.dark-mode #ceci-header-dots::-webkit-scrollbar-thumb {
+			background: rgba(255,255,255,0.15);
+		}
 	</style>
 </head>
 <body>
 
 	<header id="quiz-header" class="hidden">
 		<div class="header-content">
-			
 			<div class="h-left">
 				<button class="btn" style="padding:10px 15px; cursor:pointer; font-weight:bold; border-radius:8px;" onclick="goHome()">🏠 Home</button>
 				<button id="restart-btn" class="btn" style="padding:10px 15px; cursor:pointer; font-weight:bold; border-radius:8px;" onclick="restartQuiz()">🔄 Rinizia</button>
-				<!-- NUOVO TASTO DARK MODE -->
 				<button id="theme-toggle" class="btn" style="padding:10px 15px; cursor:pointer; font-size:1.2em; border-radius:8px;" onclick="toggleDarkMode()">🌓</button>
 			</div>
 			
@@ -517,12 +775,16 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- Riga protetta per la Modalità Ceci -->
+		<div id="ceci-row-container" class="hidden">
+			<div id="ceci-header-dots"></div>
+		</div>
+		<div class="progress-container hidden" id="prog-cont">
+			<div id="progress-bar"></div>
+		</div>
 	</header>
 	
-	<div class="progress-container hidden" id="prog-cont">
-		<div id="progress-bar"></div>
-	</div>
-
 	<!-- HOME SCREEN RIPRISTINATA -->
 
 	<div id="home-screen">
@@ -540,7 +802,7 @@
 
 			<h3>Il corretto impiego dei prodotti fitosanitari.<br>Edizione 2016 rev. 01/18<h3>
 			
-			<button class="btn-main" onclick="startQuiz('all')">📖 Tutte le domande (194)</button>
+			<button id="btn-all-questions" class="btn-main" onclick="startQuiz('all')">📖 Tutte le domande</button>
 			<div style="display: flex; gap: 8px; margin: 12px 0;">
 				<button class="btn-main" style="background: #e67e22; flex: 1; padding: 10px; font-size: 0.8em; margin-bottom:0;" onclick="startQuiz('mod1')">MOD 1</button>
 				<button class="btn-main" style="background: #27ae60; flex: 1; padding: 10px; font-size: 0.8em; margin-bottom:0;" onclick="startQuiz('mod2')">MOD 2</button>
@@ -550,12 +812,29 @@
 			<div class="rand-box">
 				<p>Quante domande casuali vuoi?</p>
 				<div class="rand-controls">
-					<input type="number" id="rand-num" value="20" min="1" max="194">
+					<input type="number" id="rand-num" value="20" min="1">
 					<button class="btn-rand" onclick="startQuiz('rand')">🎲 Inizia Casuali</button>
 				</div>
 			</div>
 			
 			<button class="btn-exam" onclick="startQuiz('exam')">⏱️ Modalità Esame</button>
+			<button class="btn-ceci" onclick="toggleCeciSelectionBox()">🧮 Modalità Cecilia</button>
+
+			<!-- Box a comparsa con la griglia dei 194 pallini -->
+			<div id="ceci-selection-box" class="hidden">
+				<div style="font-weight: bold; margin-bottom: 8px; color: #16a085; font-size: 0.9em;">
+					Seleziona da 5 a 40 domande cliccando sui pallini:
+				</div>
+				<!-- Qui JavaScript genererà i pallini da 1 a TOTAL_DOMANDE -->
+				<div id="ceci-grid-container" class="ceci-grid"></div>
+				
+				<div style="display: flex; justify-content: space-between; align-items: center;">
+					<span style="font-size: 0.85em; font-weight: bold; color: #555;">
+						Selezionate: <strong id="ceci-count-label" style="color:#16a085;">0</strong>
+					</span>
+					<button class="btn-rand" style="background:#16a085; margin:0; padding: 10px 20px;" onclick="avviaModalitaCeci()">🚀 Avvia Domande</button>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -598,7 +877,10 @@
 		if (savedTheme === 'dark') { // Lo controllo
 			document.body.classList.add('dark-mode');
 		}
-		aggiornaContatoreErrori();
+
+		window.onload = function() {
+			aggiornaContatoreErrori();
+		};
 
 		// --- CONFIGURAZIONE ---
 		const MIN_PROMOSSO = 17;
@@ -805,6 +1087,11 @@
 		// Aggiunge l'indice originale a ogni domanda per non perderlo col shuffle
 		allQuestions.forEach((q, i) => q.originalIndex = i);
 
+		const TOTAL_DOMANDE = allQuestions.length;
+		
+		document.getElementById('btn-all-questions').innerText = `📖 Tutte le domande (${TOTAL_DOMANDE})`;
+		document.getElementById('rand-num').setAttribute('max', TOTAL_DOMANDE);
+
 		const strutturaManuale = [
 			{
 				id: 1,
@@ -900,6 +1187,7 @@
 		let timerInterval = null;
 		let timeRemaining = 0;
 		let esameFinito = false;
+		let ceciSelectedIndices = [];
 
 		function mostraSuggerimento(originalIdx, currentIdx) {
 			// Usiamo currentIdx per trovare il box nel DOM
@@ -962,6 +1250,15 @@
 			document.getElementById('timer-box').classList.add('hidden');
 			document.getElementById('prog-cont').classList.remove('hidden');
 			document.getElementById('submit-exam').classList.add('hidden');
+			document.getElementById('ceci-header-dots').classList.add('hidden');
+			document.getElementById('ceci-row-container').classList.add('hidden');
+			const rb = document.getElementById('restart-btn');
+			if (rb) {
+				rb.classList.remove('hidden');
+				rb.classList.remove('glow');
+				rb.innerHTML = "🔄 Rinizia";
+				rb.onclick = restartQuiz;
+			}
 
 			if (mode === 'all') {
 				activeQuestions = [...allQuestions];
@@ -997,6 +1294,24 @@
 				const rb = document.getElementById('restart-btn');
 				rb.innerHTML = "🗑️ Reset";
 				rb.onclick = resetErrori;
+			}
+			else if (mode === 'ceci') {
+				// 1. Prima estraiamo le domande
+				activeQuestions = allQuestions.filter(q => ceciSelectedIndices.includes(q.originalIndex));
+				document.getElementById('mode-title').innerText = "🔬 Modalità Ceci";
+				
+				// 2. Poi configuriamo l'interfaccia
+				document.getElementById('badge-e').classList.add('hidden');
+				document.getElementById('badge-s').classList.add('hidden');
+				document.getElementById('timer-box').classList.add('hidden');
+				document.getElementById('prog-cont').classList.add('hidden');
+				
+				document.getElementById('submit-exam').classList.remove('hidden');
+				document.getElementById('restart-btn').classList.add('hidden');
+				document.getElementById('ceci-row-container').classList.remove('hidden'); // Mostra la riga
+				
+				// 3. INFINE lanciamo il generatore dei pallini (Se viene messo prima, non trova le domande!)
+				renderCeciHeaderDots();
 			}
 			else if (mode === 'rand') {
 				const n = parseInt(document.getElementById('rand-num').value) || 20;
@@ -1040,14 +1355,21 @@
 		}
 
 		function selectOption(qIdx, optIdx) {
-			if (esameFinito || (currentMode !== 'exam' && answersGiven[qIdx] !== undefined)) return;
+			if (esameFinito || (currentMode !== 'exam' && currentMode !== 'ceci' && answersGiven[qIdx] !== undefined)) return;
+			
 			document.getElementById(`q-box-${qIdx}`).classList.remove('missing-answer');
 			const buttons = document.querySelectorAll(`#q-box-${qIdx} .option-btn`);
 			
-			if (currentMode === 'exam') {
+			if (currentMode === 'exam' || currentMode === 'ceci') {
+				// Rimuove la selezione precedente su questa domanda
 				buttons.forEach(b => b.classList.remove('selected-exam'));
+				// Evidenzia la nuova scelta col colore blu esame
 				buttons[optIdx].classList.add('selected-exam');
 				answersGiven[qIdx] = optIdx;
+				if (currentMode === 'ceci') {
+					updateCeciHeaderDotState(qIdx, optIdx);
+				}
+				
 				updateStats();
 			} else {
 				answersGiven[qIdx] = optIdx;
@@ -1115,7 +1437,9 @@
 			clearInterval(timerInterval);
 			esameFinito = true;
 			document.getElementById('submit-exam').classList.add('hidden');
-			document.getElementById('restart-btn').classList.add('glow');
+			if (currentMode === 'exam') {
+				document.getElementById('restart-btn').classList.add('glow');
+			}
 			
 			let c = 0;
 			activeQuestions.forEach((q, idx) => {
@@ -1125,24 +1449,41 @@
 				// Rimuovo il blu dell'esame
 				if(b[u]) b[u].classList.remove('selected-exam');
 				
+				const hDot = document.getElementById(`ceci-hdot-${idx}`);
+				
 				if(u === q.correct) { 
 					if(b[u]) b[u].classList.add('correct'); 
 					c++; 
-					gestisciErroreEsame(q.originalIndex, true); 
+					gestisciErroreEsame(q.originalIndex, true);
+					if (currentMode === 'ceci' && hDot) {
+						hDot.style.setProperty('background', 'var(--correct)', 'important');
+						hDot.style.setProperty('border-color', 'var(--correct)', 'important');
+						hDot.style.setProperty('color', 'white', 'important');
+					}
 				} else { 
 					if(b[u]) b[u].classList.add('wrong'); 
 					if(b[q.correct]) b[q.correct].classList.add('correct'); 
 					gestisciErroreEsame(q.originalIndex, false);
+					if (currentMode === 'ceci' && hDot) {
+						hDot.style.setProperty('background', 'var(--wrong)', 'important');
+						hDot.style.setProperty('border-color', 'var(--wrong)', 'important');
+						hDot.style.setProperty('color', 'white', 'important');
+					}
 				}
 				document.getElementById(`q-box-${idx}`).classList.add('fade');
 			});
-			
-			alert((c >= MIN_PROMOSSO ? "PROMOSSO! 🎉" : "BOCCIATO ❌") + "\nHai risposto correttamente a " + c + " su " + total);
-			
-			// Mostro i badge dei risultati che erano nascosti
-			document.getElementById('badge-e').classList.remove('hidden');
-			document.getElementById('badge-s').classList.remove('hidden');
-			updateStats();
+			if (currentMode === 'exam') {
+				// Comportamento standard Esame: messaggi e badge visibili
+				alert((c >= MIN_PROMOSSO ? "PROMOSSO! 🎉" : "BOCCIATO ❌") + "\nHai risposto correttamente a " + c + " su " + total);
+				document.getElementById('badge-e').classList.remove('hidden');
+				document.getElementById('badge-s').classList.remove('hidden');
+				updateStats();
+			} else if (currentMode === 'ceci') {
+				// Comportamento pulito per Ceci: nessun badge in alto, solo un avviso neutro delle risposte corrette
+				alert("Verifica completata! 🔬\nHai risposto correttamente a " + c + " su " + total + " domande scelte.");
+				// Aggiorna solo la stringa testuale del contatore "Risposte: X/Y" senza mostrare i badge esatte/sbagliate
+				document.getElementById('badge-r').innerText = `Risposte: ${answeredCount}/${total}`;
+			}
 		}
 
 		function initTimer() {
@@ -1162,9 +1503,22 @@
 			if (timerInterval) clearInterval(timerInterval);
 			
 			// 2. Controllo se uscire (solo se il quiz è in corso e non è finito)
-			if (!force && !esameFinito && currentMode !== 'errors' && Object.keys(answersGiven).length > 0) {
+			if (!force && !esameFinito && currentMode !== 'errors' && (Object.keys(answersGiven).length > 0 || currentMode === 'ceci')) {
 				if (!confirm("Il quiz è in corso. Vuoi tornare alla home e perdere i progressi?")) return;
 			}
+
+			ceciSelectedIndices = []; // Svuota la lista delle domande selezionate
+			
+			const ceciBox = document.getElementById('ceci-selection-box');
+			if (ceciBox) ceciBox.classList.add('hidden'); // Chiude visivamente il riquadro
+			
+			const labelCount = document.getElementById('ceci-count-label');
+			if (labelCount) labelCount.innerText = "0"; // Resetta il contatore visivo a 0
+			
+			// Rimuove il colore verde pieno da tutti i pallini della griglia nella Home
+			document.querySelectorAll('.ceci-select-dot').forEach(dot => {
+				dot.classList.remove('selected');
+			});
 
 			// 3. Reset variabili logiche per il prossimo quiz
 			answersGiven = {};
@@ -1183,6 +1537,10 @@
 			document.getElementById('badge-r').innerText = "Risposte: 0/0";
 			
 			// 5. Cambio schermata
+			const ceciRow = document.getElementById('ceci-row-container');
+			if (ceciRow) ceciRow.classList.add('hidden');
+			
+			document.getElementById('submit-exam').classList.add('hidden');
 			document.getElementById('scroll-index').classList.add('hidden-index');
 			document.getElementById('quiz-header').classList.add('hidden');
 			document.getElementById('prog-cont').classList.add('hidden');
@@ -1292,6 +1650,124 @@
 				goHome(true);
 			}
 		}
+
+		// --- LOGICA MODALITÀ CECI ---
+
+		// 1. Mostra o nasconde il box di selezione nella Home e genera la griglia se vuota
+		function toggleCeciSelectionBox() {
+			const box = document.getElementById('ceci-selection-box');
+			const isOpening = box.classList.contains('hidden'); // Controlla se lo stiamo aprendo
+			
+			box.classList.toggle('hidden');
+			
+			const container = document.getElementById('ceci-grid-container');
+			// Genera la griglia dei pallini solo la prima volta che viene aperta
+			if (container.children.length === 0) {
+				for (let i = 0; i < TOTAL_DOMANDE; i++) {
+					const dot = document.createElement('div');
+					dot.className = 'ceci-select-dot';
+					dot.innerText = i + 1;
+					dot.onclick = () => toggleSelectCeciQuestion(i, dot);
+					container.appendChild(dot);
+				}
+			}
+
+			if (isOpening) {
+				const grid = document.querySelector('.ceci-grid');
+				if (grid) grid.scrollTop = 0;
+			}
+		}
+
+		// 2. Gestisce il clic sul pallino nella Home (selezione/deselezione)
+		function toggleSelectCeciQuestion(index, element) {
+			const pos = ceciSelectedIndices.indexOf(index);
+			if (pos > -1) {
+				// Se era già selezionato, lo rimuove
+				ceciSelectedIndices.splice(pos, 1);
+				element.classList.remove('selected');
+			} else {
+				// Se non era selezionato, controlla il limite massimo di 40
+				if (ceciSelectedIndices.length >= 40) {
+					alert("Puoi selezionare al massimo 40 domande per la Modalità Cecilia!");
+					return;
+				}
+				ceciSelectedIndices.push(index);
+				element.classList.add('selected');
+			}
+			// Aggiorna il contatore visivo nella Home
+			document.getElementById('ceci-count-label').innerText = ceciSelectedIndices.length;
+		}
+
+		// 3. Controlla i limiti (5-40) e lancia il quiz
+		function avviaModalitaCeci() {
+			const count = ceciSelectedIndices.length;
+			if (count < 5 || count > 40) {
+				alert("Seleziona da un minimo di 5 a un massimo di 40 domande per la Modalità Cecilia! 🧮");
+				return;
+			}
+			// Ordina gli indici in modo crescente per avere le domande in ordine numerico ordinato
+			ceciSelectedIndices.sort((a, b) => a - b);
+			
+			// Avvia il quiz passando la modalità speciale 'ceci'
+			startQuiz('ceci');
+		}
+
+		// 4. Genera i pallini dinamici all'interno dell'header durante il quiz
+		function renderCeciHeaderDots() {
+			const container = document.getElementById('ceci-header-dots');
+			if (!container) return; // Sicurezza per evitare blocchi
+			container.innerHTML = '';
+			
+			activeQuestions.forEach((q, idx) => {
+				const hDot = document.createElement('div');
+				hDot.className = 'ceci-header-dot';
+				hDot.id = `ceci-hdot-${idx}`;
+				
+				// Struttura iniziale richiesta: Numero + Simbolo vuoto
+				hDot.innerHTML = `<span style="font-size: 0.95em; display: block;">${q.originalIndex + 1}</span><span style="font-size: 0.75em; font-weight: normal; color: #aaa; display: block;">Ø</span>`
+				
+				hDot.onclick = () => {
+					const target = document.getElementById(`q-box-${idx}`);
+					const header = document.getElementById('quiz-header');
+					if (target && header) {
+						// Il browser legge l'altezza dell'header e sa esattamente dove fermarsi nello scroll
+						target.style.scrollMarginTop = (header.offsetHeight + 15) + "px";
+						target.scrollIntoView({ 
+							behavior: 'smooth', 
+							block: 'start' 
+						});
+					}
+				};
+
+				container.appendChild(hDot);
+			});
+		}
+
+		// 5. Aggiorna l'aspetto del pallino dell'header quando l'utente risponde
+		function updateCeciHeaderDotState(qIdx, optIdx) {
+			if (currentMode !== 'ceci') return;
+			const hDot = document.getElementById(`ceci-hdot-${qIdx}`);
+			if (!hDot || esameFinito) return;
+			
+			const letter = String.fromCharCode(65 + optIdx); // Trasforma 0 in A, 1 in B, 2 in C
+			const origNum = activeQuestions[qIdx].originalIndex + 1;
+			
+			// Forziamo una struttura flessibile interna al pallino per tenere il testo centrato ed evitare deformazioni
+			hDot.style.display = 'inline-flex';
+			hDot.style.flexDirection = 'column';
+			hDot.style.alignItems = 'center';
+			hDot.style.justifyContent = 'center';
+			
+			hDot.innerHTML = `
+				<span style="font-size: 1rem; font-weight: bold; line-height: 1;">${origNum}</span>
+				<span style="font-size: 1rem; font-weight: 900; line-height: 1; margin-top: 2px; color: #fff;">${letter}</span>
+			`;
+
+			hDot.style.setProperty('background', 'var(--exam-blue)', 'important');
+			hDot.style.setProperty('border-color', 'var(--exam-blue)', 'important');
+			hDot.style.setProperty('color', 'white', 'important');
+		}
+
 		
 		console.log("%c🚜 Quiz Patentino %cby LuxR & Gemini AI", 
 			"color: #e67e22; font-weight: bold; font-size: 16px;", 
