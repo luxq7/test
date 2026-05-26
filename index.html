@@ -2,14 +2,16 @@
 <!-- 
 	============================================================================
 	PROJECT:    Simulatore Quiz Patentino Fitosanitario
-	VERSION:    1.2
+	VERSION:    1.3 (Frosted Glass & Mobile UI Update)
 	AUTHOR:     Luciano
 	COLLAB:     Sviluppato in collaborazione con Google Gemini AI
 	RESOURCES:  Quesiti ufficiali Regione Emilia-Romagna (Guida 2016 rev.01/18)
 	LICENSE:    Strettamente didattico e senza scopo di lucro
 	BUILD DATE: Maggio 2026
-	NOTES:      Struttura ottimizzata per mobile, mappatura moduli e 
-				navigazione rapida per 194 domande.
+	NOTES:      Struttura mappatura moduli e navigazione rapida (194 domande).
+	            Interfaccia asincrona con popup sfocati nativi in Dark Mode.
+	            Feedback tattili dinamici e timer smart post-click per gli errori.
+	            Griglia Cecilia a comparsa salva-spazio ottimizzata per mobile.
 	============================================================================
 -->
 
@@ -163,7 +165,66 @@
 			cursor: pointer;
 			font-weight: bold;
 		}
-		
+
+		.btn-main, .btn-rand, .btn-exam {
+			transition: background-color 0.2s ease, transform 0.1s ease !important;
+		}
+
+		/* HOVER (PC): Si illuminano di un tono più chiaro */
+		.btn-main:hover, .btn-rand:hover {
+			background-color: #34495e !important; /* Più luminoso di #2c3e50 */
+		}
+
+		.btn-exam:hover {
+			background-color: #9b59b6 !important; /* Più luminoso di #8e44ad */
+		}
+
+		.btn-ceci:hover {
+			background-color: #1abc9c !important; /* Si illumina di un verde acqua più acceso del tuo #16a085 */
+		}
+
+		/* ACTIVE (Mobile): Si contraggono sotto il dito (Ceci lo fa già per conto suo) */
+		.btn-main:active, .btn-rand:active, .btn-exam:active {
+			transform: scale(0.98) !important;
+		}
+
+		/* 2. Mini Pulsanti dei Moduli (MOD 1, MOD 2, MOD 3) */
+		#home-screen .btn-main[style*="background"] {
+			transition: filter 0.2s ease, transform 0.1s ease !important;
+		}
+		#home-screen .btn-main[style*="background"]:hover {
+			filter: brightness(1.1); /* Accende la luce interna del colore */
+		}
+		#home-screen .btn-main[style*="background"]:active {
+			transform: scale(0.96) !important;
+		}
+
+		/* 3. Icone Minimali in Alto (Giorno/Notte con il tuo nuovo Title, e Ripassa Errori) */
+		#home-screen .btn {
+			transition: background-color 0.2s ease, transform 0.1s ease !important;
+		}
+		#home-screen .btn:hover {
+			background-color: rgba(0, 0, 0, 0.05) !important; /* Crea l'alone circolare */
+		}
+		#home-screen .btn:active {
+			transform: scale(0.92) !important;
+		}
+
+		header .btn {
+			transition: background-color 0.2s ease, transform 0.1s ease !important;
+		}
+
+		/* HOVER (PC): Crea uno sfondo grigio chiaro soft al passaggio del mouse */
+		header .btn:hover {
+			background-color: #f1f3f5 !important;
+			color: #2c3e50 !important;
+		}
+
+		/* ACTIVE (Mobile): Micro-rimbalzo del 2% al tocco del dito */
+		header .btn:active {
+			transform: scale(0.98) !important;
+		}
+
 		/* DOMANDE PIÙ GRANDI */
 		#quiz-container { max-width: 850px; margin: 20px auto 80px; padding: 0 20px; }
 
@@ -173,12 +234,15 @@
 		
 		.q-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
 		.q-text { font-weight: 700; font-size: 1.2em; color: var(--primary); line-height: 1.5; flex: 1; }
-		.hint-btn { background: #e8f4fd; color: var(--exam-blue); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-weight: bold; font-size: 1.2em; border: 1px solid #d6eaf8; margin-left: 15px; }
+		.hint-btn { background: #e8f4fd; color: var(--exam-blue); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-weight: bold; font-size: 1.2em; border: 1px solid #d6eaf8; margin-left: 15px; transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease !important; }
+		.hint-btn:hover { background-color: #d4ecfc !important; border-color: #1a73e8 !important; color: #0056b3 !important; }
+		.hint-btn:active { transform: scale(0.94) !important; }
 
 		.options { display: flex; flex-direction: column; gap: 12px; }
 		.option-btn { padding: 16px; border: 1px solid #dee2e6; border-radius: 12px; background: #fff; text-align: left; cursor: pointer; transition: 0.2s; font-size: 1.1em; }
 		.option-btn:hover { background: #f8f9fa; border-color: var(--exam-blue); }
-		
+		.option-btn:active { transform: scale(0.98); }		
+
 		.correct { background: var(--correct) !important; color: white; border-color: var(--correct); }
 		.wrong { background: var(--wrong) !important; color: white; border-color: var(--wrong); }
 		.selected-exam { background: var(--exam-blue) !important; color: white; border-color: var(--exam-blue); }
@@ -240,6 +304,28 @@
 			border-top: 1px solid #eee; 
 			margin: 0 auto 10px auto; /* 15px o 10px per avvicinare il testo alla linea */
 			max-width: 800px;
+		}
+
+		footer a.download-btn-style {
+			background-color: #f8f9fa !important;
+			color: #1a73e8 !important;
+			border: 2px solid #1a73e8 !important;
+			padding: 10px 20px;
+			border-radius: 5px;
+			display: inline-block;
+			text-decoration: none !important;
+			font-weight: bold;
+			box-sizing: border-box;
+			
+			transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+		}
+
+		footer a.download-btn-style:hover, 
+		footer a.download-btn-style:active {
+			background-color: #007bff !important;
+			border-color: #1557b0 !important;
+			color: #ffffff !important;
+			text-decoration: none !important;
 		}
 
 		#submit-container { 
@@ -413,8 +499,61 @@
 			.mode-title {
 				font-size: 1.1em; 
 			}
+
+			/* Ceci Tasto Mappa Domande (SMARTPHONE) */
+			#ceci-row-container {
+				flex-direction: column !important;
+				padding: 8px !important;
+			}
+
+			/* Stile del pulsante Apri/Chiudi */
+			#ceci-row-container {
+				flex-direction: column !important;
+				padding: 8px !important;
+			}
+
+			/* Stile del pulsante Apri/Chiudi */
+			#ceci-toggle-menu {
+				display: block !important; /* Diventa visibile solo su smartphone */
+				width: 100%;
+				max-width: 320px;
+				padding: 8px 15px;
+				background-color: #16a085; /* Il tuo verde acqua ceci */
+				color: white;
+				border: none;
+				border-radius: 8px;
+				font-weight: bold;
+				cursor: pointer;
+				font-size: 0.9rem;
+				margin-bottom: 5px;
+				box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+				transition: transform 0.1s;
+			}
+			#ceci-toggle-menu:active {
+				transform: scale(0.98);
+			}
+
+			header #ceci-header-dots {
+				display: none !important; 
+				max-height: 250px;
+				overflow-y: auto;
+				border-top: 1px solid rgba(0, 0, 0, 0.1);
+				padding-top: 10px !important;
+				margin-top: 5px;
+			}
+
+			/* Quando l'utente clicca sul tasto, questa classe riattiva la griglia */
+			header #ceci-header-dots.menu-aperto {
+				display: flex !important;
+			}
 			
-			/* 🚀 RIMOSSI I RIMPICCIOLIMENTI: I badge rimangono grandi come su PC */
+			/* Supporto Dark Mode per il tasto mobile */
+			body.dark-mode #ceci-toggle-menu {
+				background-color: #117a65;
+			}
+			body.dark-mode header #ceci-header-dots {
+				border-top-color: rgba(255, 255, 255, 0.1) !important; /* Diventa scura e trasparente di notte */
+			}
 		}
 
 		/* Barra laterale per lo scroll veloce */
@@ -498,6 +637,23 @@
 			border-top: 1px solid #444;
 		}
 
+		body.dark-mode footer a.download-btn-style {
+			background-color: #2a2a2a !important;
+			color: #e0e0e0 !important;
+			border: 2px solid #b3b3b3 !important;
+		}
+
+		body.dark-mode footer a.download-btn-style:hover, 
+		body.dark-mode footer a.download-btn-style:active {
+			background-color: #0056b3 !important;
+			border-color: #66b2ff !important;
+			color: #ffffff !important;
+		}
+
+		body.dark-mode .badge {
+			box-shadow: 0 2px 5px rgba(0,0,0,0.4) !important;
+		}
+
 		/* Box Casuali e Input */
 		body.dark-mode .rand-box {
 			background-color: #252525 !important;
@@ -531,6 +687,36 @@
 		body.dark-mode .btn-rand:not([style*="background"]) {
 			background-color: #2c3e50 !important;
 			border: 1px solid #444;
+		}
+
+		/* FIX EFFETTI HOVER NOTTURNI */
+		body.dark-mode .btn-main:not([style*="background"]):hover, 
+		body.dark-mode .btn-rand:not([style*="background"]):hover {
+			background-color: #3d566e !important; 
+		}
+		body.dark-mode .btn-exam:hover {
+			background-color: #7d3c98 !important; 
+		}
+		body.dark-mode #home-screen .btn:hover {
+			background-color: rgba(255, 255, 255, 0.1) !important;
+		}
+
+		body.dark-mode header .btn:hover {
+			background-color: #2d2d2d !important;
+			color: #ffffff !important;
+		}
+
+		body.dark-mode .hint-btn:hover {
+			background-color: #3a3a3a !important;
+			border-color: #555555 !important;
+			color: #8ab4f8 !important;
+		}
+
+		body.dark-mode #scroll-index .index-dot:hover,
+		body.dark-mode #scroll-index .index-dot:active {
+			background-color: #ffffff !important;
+			color: #121212 !important;
+			border-color: #ffffff !important;
 		}
 
 		/* Fix per i suggerimenti (info pagine) */
@@ -634,6 +820,14 @@
 			border-color: #16a085;
 		}
 
+		.ceci-select-dot {
+			transition: border-color 0.15s ease !important;
+		}
+
+		.ceci-select-dot:hover {
+			border-color: #117a65 !important; /* Un tono più scuro e deciso del tuo #16a085 */
+		}
+
 
 		/* 2. INTERFACCIA DURANTE IL QUIZ (HEADER DEDICATO) */
 
@@ -702,15 +896,23 @@
 			box-sizing: border-box;
 		}
 
-		.ceci-header-dot:hover {
+		.ceci-header-dot:hover,
+		.ceci-header-dot:active {
 			transform: scale(1.05);
 			box-shadow: 0 4px 8px rgba(0,0,0,0.12);
 		}
 
+		#ceci-toggle-menu {
+			display: none;
+		}
 
 		/* 3. ADATTAMENTO E OTTIMIZZAZIONE PER COMPLETA DARK MODE */
 		body.dark-mode .btn-ceci {
 			background: #117a65; /* Sfumatura leggermente più scura del verde acqua */
+		}
+
+		body.dark-mode .btn-ceci:hover {
+			background-color: #148f77 !important; /* Verde acqua scuro ma retroilluminato per la notte */
 		}
 
 		body.dark-mode #ceci-selection-box {
@@ -735,6 +937,10 @@
 			border-color: #117a65;
 		}
 
+		body.dark-mode .ceci-select-dot:hover {
+			border-color: #0e6251 !important;
+		}
+
 		body.dark-mode #ceci-row-container {
 			background: #1e1e1e !important;
 			border-color: #2d2d2d !important;
@@ -749,6 +955,114 @@
 
 		body.dark-mode #ceci-header-dots::-webkit-scrollbar-thumb {
 			background: rgba(255,255,255,0.15);
+		}
+
+		/* ========================================================
+		   FINESTRA POPUP SFUOCATO CENTRATO (TEMA CHIARO)
+		   ======================================================== */
+		dialog#customAlert {
+			padding: 25px;
+			border-radius: 16px;
+			border: 1px solid #e0e0e0;
+			max-width: 420px;
+			width: 85%;
+			text-align: center;
+			box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+			background-color: #ffffff;
+			color: #2c3e50;
+			font-family: inherit;
+		}
+
+		/* Gestione dei testi interni */
+		dialog#customAlert p {
+			margin: 0 0 20px 0;
+			line-height: 1.5;
+			font-size: 1.05rem;
+			font-weight: 500;
+			white-space: pre-wrap; /* Mantiene a capo (\n) originali */
+		}
+
+		/* Contenitore dei pulsanti interni */
+		#customAlertButtons {
+			display: flex;
+			gap: 12px;
+			justify-content: center;
+		}
+
+		/* Stile universale per i pulsanti del popup */
+		.popup-btn {
+			padding: 10px 24px;
+			border: none;
+			border-radius: 8px;
+			cursor: pointer;
+			font-weight: bold;
+			font-size: 0.95rem;
+			transition: background 0.2s, transform 0.1s;
+		}
+		.popup-btn:active {
+			transform: scale(0.97);
+		}
+
+		/* Bottone di Conferma Primaria (OK / SI) */
+		.popup-btn-confirm {
+			background-color: #2980b9; /* Il tuo blu esame originario */
+			color: white;
+		}
+		.popup-btn-confirm:hover {
+			background-color: #1f618d;
+		}
+
+		/* Bottone di Annullamento (ANNULLA / NO) */
+		.popup-btn-cancel {
+			background-color: #e0e0e0;
+			color: #333;
+		}
+		.popup-btn-cancel:hover {
+			background-color: #d5d5d5;
+		}
+
+		/* --- EFFETTO SFOCATURA DELLO SFONDO --- */
+		dialog#customAlert::backdrop {
+			background: rgba(0, 0, 0, 0.25);
+			backdrop-filter: blur(8px);
+			-webkit-backdrop-filter: blur(8px); /* Ottimizzazione Safari Mobile */
+		}
+
+		dialog#customAlert[open] {
+			animation: popIn 0.25s ease-out;
+		}
+
+		@keyframes popIn {
+			from {
+				opacity: 0;
+				transform: scale(0.92);
+			}
+			to {
+				opacity: 1;
+				transform: scale(1);
+			}
+		}
+
+		/* ========================================================
+		   ADATTAMENTO PER LA TUA DARK MODE
+		   ======================================================== */
+		body.dark-mode dialog#customAlert {
+			background-color: #1e1e1e !important; /* Il tuo grigio scuro dei box */
+			color: #ffffff !important;
+			border-color: #333333 !important;
+			box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+		}
+
+		body.dark-mode .popup-btn-cancel {
+			background-color: #333;
+			color: #fff;
+		}
+		body.dark-mode .popup-btn-cancel:hover {
+			background-color: #444;
+		}
+
+		body.dark-mode dialog#customAlert::backdrop {
+			background: rgba(0, 0, 0, 0.45); /* Più scuro di notte per far risaltare il popup */
 		}
 	</style>
 </head>
@@ -778,6 +1092,7 @@
 
 		<!-- Riga protetta per la Modalità Ceci -->
 		<div id="ceci-row-container" class="hidden">
+			<button id="ceci-toggle-menu" onclick="toggleCeciMobileMenu()">🧮 Mostra Mappa Domande</button>
 			<div id="ceci-header-dots"></div>
 		</div>
 		<div class="progress-container hidden" id="prog-cont">
@@ -796,7 +1111,7 @@
 					<button id="btn-errori" class="btn" style="padding: 8px 12px; cursor:pointer; font-size:1.1em; border-radius:8px; position:relative;" onclick="startQuiz('errors')" title="Ripassa Errori">
 						🚩 <span id="error-count" style="font-size: 0.6em; position: absolute; top: -5px; right: -5px; background: var(--wrong); color: white; border-radius: 50%; padding: 2px 6px; display: none; font-family: sans-serif;">0</span>
 					</button>
-					<button class="btn" style="padding: 8px 12px; cursor:pointer; font-size:1.1em; border-radius:8px;" onclick="toggleDarkMode()">🌓</button>
+					<button class="btn" style="padding: 8px 12px; cursor:pointer; font-size:1.1em; border-radius:8px;" onclick="toggleDarkMode()" title="Giorno/Notte">🌓</button>
 				</div>
 			</div>
 
@@ -862,7 +1177,14 @@
 		<p style="font-style: italic; margin-top: 15px;">
 			L'uso di questo file è strettamente didattico e senza scopo di lucro.
 		</p>
+		<!-- <p><a href="index.html" download="quiz.html" class="download-btn-style"> -->
+			<!-- 📥 Scarica questo quiz -->
+		<!-- </a></p> -->
 	</footer>
+	<dialog id="customAlert" style="z-index: 2500;">
+		<p id="customAlertText"></p>
+		<div id="customAlertButtons"></div>
+	</dialog>
 	<div id="scroll-index" class="hidden-index">
 		<div class="index-dot" onclick="jumpTo(1)" title="Intro">1</div>
 		<div class="index-dot" onclick="jumpTo(25)" title="Unità 1">25</div>
@@ -1221,15 +1543,72 @@
 			
 			box.appendChild(hintDiv);
 		}
-		
+
+		function mostraAlert(testo, callback = null) {
+			const dialog = document.getElementById('customAlert');
+			const textEl = document.getElementById('customAlertText');
+			const buttonsContainer = document.getElementById('customAlertButtons');
+
+			if (!dialog || !textEl || !buttonsContainer) return;
+
+			textEl.innerHTML = testo.replace(/\n/g, '<br>');
+			buttonsContainer.innerHTML = '';
+
+			const btnOk = document.createElement('button');
+			btnOk.className = 'popup-btn popup-btn-confirm';
+			btnOk.innerText = 'OK';
+			btnOk.onclick = function() {
+				dialog.close();
+				document.body.style.overflow = ''
+				if (callback) callback();
+			};
+
+			buttonsContainer.appendChild(btnOk);
+			document.body.style.overflow = 'hidden';
+			dialog.showModal(); // Blocca lo schermo e sfuoca
+		}
+
+		function mostraConfirm(testo, callbackSi, callbackNo = null) {
+			const dialog = document.getElementById('customAlert');
+			const textEl = document.getElementById('customAlertText');
+			const buttonsContainer = document.getElementById('customAlertButtons');
+
+			if (!dialog || !textEl || !buttonsContainer) return;
+
+			textEl.innerHTML = testo.replace(/\n/g, '<br>');
+			buttonsContainer.innerHTML = '';
+
+			const btnNo = document.createElement('button');
+			btnNo.className = 'popup-btn popup-btn-cancel';
+			btnNo.innerText = 'Annulla';
+			btnNo.onclick = function() {
+				dialog.close();
+				document.body.style.overflow = '';
+				if (callbackNo) callbackNo();
+			};
+
+			const btnSi = document.createElement('button');
+			btnSi.className = 'popup-btn popup-btn-confirm';
+			btnSi.innerText = 'Conferma';
+			btnSi.onclick = function() {
+				dialog.close();
+				document.body.style.overflow = '';
+				if (callbackSi) callbackSi();
+			};
+
+			buttonsContainer.appendChild(btnNo);
+			buttonsContainer.appendChild(btnSi);
+			document.body.style.overflow = 'hidden';
+			dialog.showModal();
+		}
 
 		function startQuiz(mode) {
 			// 1. CONTROLLO PREVENTIVO (Solo per modalità errori)
 			if (mode === 'errors') {
 				const ids = JSON.parse(localStorage.getItem('quiz_errori') || "[]");
 				if (ids.length === 0) {
-					alert("Il tuo salvadanaio è vuoto! Sbaglia qualche domanda per riempirlo. 🚜");
-					return; // Esce e resta sulla Home
+					mostraAlert("Il tuo salvadanaio è vuoto! Sbaglia qualche domanda per riempirlo. 🚜");
+					return;
 				}
 			}
 
@@ -1238,6 +1617,11 @@
 			currentMode = mode;
 			answersGiven = {};
 			esameFinito = false;
+			
+			const dotsContainer = document.getElementById('ceci-header-dots');
+			if (dotsContainer) dotsContainer.classList.remove('menu-aperto');
+			const toggleBtn = document.getElementById('ceci-toggle-menu');
+			if (toggleBtn) toggleBtn.innerText = "🧮 Mostra Mappa Domande";
 			
 			document.getElementById('home-screen').classList.add('hidden');
 			document.getElementById('quiz-header').classList.remove('hidden');
@@ -1422,68 +1806,72 @@
 					}
 				}
 				
-				alert("Mancano le risposte: " + m.join(", "));
-				
-				const primaMancanteIdx = m[0] - 1; 
-				const target = document.getElementById(`q-box-${primaMancanteIdx}`);
-				if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				mostraAlert("Mancano le risposte: " + m.join(", "), function() {
+					// --- TUTTO QUESTO PARTE SOLO DOPO AVER PREMUTO OK ---
+					const primaMancanteIdx = m[0] - 1; 
+					const target = document.getElementById(`q-box-${primaMancanteIdx}`);
+					if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+					// IL TIMER PARTE ADESSO: Spegne il lampeggiamento dopo 4 secondi dallo scroll
+					setTimeout(function() {
+						document.querySelectorAll('.question-box').forEach(b => {
+							b.classList.remove('missing-answer');
+						});
+					}, 5000); // 5 secondi
+				});
 				return;
 			}
 
-			// 2. Conferma consegna
-			if(!confirm("Sei sicuro? Se consegni non potrai più cambiare le risposte.")) return;
-			
-			// 3. Logica fine esame
-			clearInterval(timerInterval);
-			esameFinito = true;
-			document.getElementById('submit-exam').classList.add('hidden');
-			if (currentMode === 'exam') {
-				document.getElementById('restart-btn').classList.add('glow');
-			}
-			
-			let c = 0;
-			activeQuestions.forEach((q, idx) => {
-				const u = answersGiven[idx];
-				const b = document.querySelectorAll(`#q-box-${idx} .option-btn`);
-				
-				// Rimuovo il blu dell'esame
-				if(b[u]) b[u].classList.remove('selected-exam');
-				
-				const hDot = document.getElementById(`ceci-hdot-${idx}`);
-				
-				if(u === q.correct) { 
-					if(b[u]) b[u].classList.add('correct'); 
-					c++; 
-					gestisciErroreEsame(q.originalIndex, true);
-					if (currentMode === 'ceci' && hDot) {
-						hDot.style.setProperty('background', 'var(--correct)', 'important');
-						hDot.style.setProperty('border-color', 'var(--correct)', 'important');
-						hDot.style.setProperty('color', 'white', 'important');
-					}
-				} else { 
-					if(b[u]) b[u].classList.add('wrong'); 
-					if(b[q.correct]) b[q.correct].classList.add('correct'); 
-					gestisciErroreEsame(q.originalIndex, false);
-					if (currentMode === 'ceci' && hDot) {
-						hDot.style.setProperty('background', 'var(--wrong)', 'important');
-						hDot.style.setProperty('border-color', 'var(--wrong)', 'important');
-						hDot.style.setProperty('color', 'white', 'important');
-					}
+			mostraConfirm("Sei sicuro? Se consegni non potrai più cambiare le risposte.", function() {
+				// Questo codice parte SOLO se l'utente clicca su "Conferma"
+				clearInterval(timerInterval);
+				esameFinito = true;
+				document.getElementById('submit-exam').classList.add('hidden');
+				if (currentMode === 'exam') {
+					document.getElementById('restart-btn').classList.add('glow');
 				}
-				document.getElementById(`q-box-${idx}`).classList.add('fade');
+				
+				let c = 0;
+				activeQuestions.forEach((q, idx) => {
+					const u = answersGiven[idx];
+					const b = document.querySelectorAll(`#q-box-${idx} .option-btn`);
+					
+					if(b[u]) b[u].classList.remove('selected-exam');
+					const hDot = document.getElementById(`ceci-hdot-${idx}`);
+					
+					if(u === q.correct) { 
+						if(b[u]) b[u].classList.add('correct'); 
+						c++; 
+						gestisciErroreEsame(q.originalIndex, true);
+						if (currentMode === 'ceci' && hDot) {
+							hDot.style.setProperty('background', 'var(--correct)', 'important');
+							hDot.style.setProperty('border-color', 'var(--correct)', 'important');
+							hDot.style.setProperty('color', 'white', 'important');
+						}
+					} else { 
+						if(b[u]) b[u].classList.add('wrong'); 
+						if(b[q.correct]) b[q.correct].classList.add('correct'); 
+						gestisciErroreEsame(q.originalIndex, false);
+						if (currentMode === 'ceci' && hDot) {
+							hDot.style.setProperty('background', 'var(--wrong)', 'important');
+							hDot.style.setProperty('border-color', 'var(--wrong)', 'important');
+							hDot.style.setProperty('color', 'white', 'important');
+						}
+					}
+					document.getElementById(`q-box-${idx}`).classList.add('fade');
+				});
+
+				if (currentMode === 'exam') {
+					const esito = (c >= MIN_PROMOSSO ? "PROMOSSO! 🎉" : "BOCCIATO ❌");
+					mostraAlert(esito + "\nHai risposto correttamente a " + c + " su " + total);
+					document.getElementById('badge-e').classList.remove('hidden');
+					document.getElementById('badge-s').classList.remove('hidden');
+					updateStats();
+				} else if (currentMode === 'ceci') {
+					mostraAlert("Verifica completata! 🔬\nHai risposto correttamente a " + c + " su " + total + " domande scelte.");
+					document.getElementById('badge-r').innerText = `Risposte: ${answeredCount}/${total}`;
+				}
 			});
-			if (currentMode === 'exam') {
-				// Comportamento standard Esame: messaggi e badge visibili
-				alert((c >= MIN_PROMOSSO ? "PROMOSSO! 🎉" : "BOCCIATO ❌") + "\nHai risposto correttamente a " + c + " su " + total);
-				document.getElementById('badge-e').classList.remove('hidden');
-				document.getElementById('badge-s').classList.remove('hidden');
-				updateStats();
-			} else if (currentMode === 'ceci') {
-				// Comportamento pulito per Ceci: nessun badge in alto, solo un avviso neutro delle risposte corrette
-				alert("Verifica completata! 🔬\nHai risposto correttamente a " + c + " su " + total + " domande scelte.");
-				// Aggiorna solo la stringa testuale del contatore "Risposte: X/Y" senza mostrare i badge esatte/sbagliate
-				document.getElementById('badge-r').innerText = `Risposte: ${answeredCount}/${total}`;
-			}
 		}
 
 		function initTimer() {
@@ -1492,69 +1880,78 @@
 				timeRemaining--;
 				let m = Math.floor(timeRemaining / 60), s = timeRemaining % 60;
 				document.getElementById('timer-box').innerText = `${m}:${s < 10 ? '0'+s : s}`;
-				if(timeRemaining <= 0) { clearInterval(timerInterval); alert("Tempo scaduto!"); consegnaEsame(); }
+				if(timeRemaining <= 0) { 
+					clearInterval(timerInterval); 
+					mostraAlert("Tempo scaduto!", function() {
+						consegnaEsame(); 
+					});
+				}
 			}, 1000);
 		}
 
 		function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 		
 		function goHome(force = false) {
-			// 1. Ferma il timer se attivo
-			if (timerInterval) clearInterval(timerInterval);
-			
-			// 2. Controllo se uscire (solo se il quiz è in corso e non è finito)
+			// Funzione interna per isolare la pulizia variabili ed eseguire il rientro effettivo alla home
+			function eseguiRientro() {
+				if (timerInterval) clearInterval(timerInterval);
+				ceciSelectedIndices = []; 
+				
+				const ceciBox = document.getElementById('ceci-selection-box');
+				if (ceciBox) ceciBox.classList.add('hidden'); 
+				
+				const labelCount = document.getElementById('ceci-count-label');
+				if (labelCount) labelCount.innerText = "0"; 
+				
+				document.querySelectorAll('.ceci-select-dot').forEach(dot => {
+					dot.classList.remove('selected');
+				});
+
+				answersGiven = {};
+				activeQuestions = [];
+				currentMode = '';
+				esameFinito = false;
+
+				const rb = document.getElementById('restart-btn');
+				if(rb) {
+					rb.innerHTML = "🔄 Rinizia";
+					rb.classList.remove('glow');
+					rb.onclick = restartQuiz;
+				}
+				document.getElementById('progress-bar').style.width = '0%';
+				document.getElementById('badge-r').innerText = "Risposte: 0/0";
+				
+				const ceciRow = document.getElementById('ceci-row-container');
+				if (ceciRow) ceciRow.classList.add('hidden');
+				
+				document.getElementById('submit-exam').classList.add('hidden');
+				document.getElementById('scroll-index').classList.add('hidden-index');
+				document.getElementById('quiz-header').classList.add('hidden');
+				document.getElementById('prog-cont').classList.add('hidden');
+				document.getElementById('quiz-container').innerHTML = '';
+				document.getElementById('home-screen').classList.remove('hidden');
+				window.scrollTo(0,0);
+			}
+
+			// Sostituito confirm nativo con la modale sfuocata
 			if (!force && !esameFinito && currentMode !== 'errors' && (Object.keys(answersGiven).length > 0 || currentMode === 'ceci')) {
-				if (!confirm("Il quiz è in corso. Vuoi tornare alla home e perdere i progressi?")) return;
+				mostraConfirm("Il quiz è in corso. Vuoi tornare alla home e perdere i progressi?", function() {
+					eseguiRientro(); // Parte solo se l'utente preme "Conferma"
+				});
+			} else {
+				eseguiRientro(); // Esce direttamente senza chiedere se forzato o se l'esame è concluso
 			}
-
-			ceciSelectedIndices = []; // Svuota la lista delle domande selezionate
-			
-			const ceciBox = document.getElementById('ceci-selection-box');
-			if (ceciBox) ceciBox.classList.add('hidden'); // Chiude visivamente il riquadro
-			
-			const labelCount = document.getElementById('ceci-count-label');
-			if (labelCount) labelCount.innerText = "0"; // Resetta il contatore visivo a 0
-			
-			// Rimuove il colore verde pieno da tutti i pallini della griglia nella Home
-			document.querySelectorAll('.ceci-select-dot').forEach(dot => {
-				dot.classList.remove('selected');
-			});
-
-			// 3. Reset variabili logiche per il prossimo quiz
-			answersGiven = {};
-			activeQuestions = [];
-			currentMode = '';
-			esameFinito = false;
-
-			// 4. Ripristino dei bottoni e dell'interfaccia
-			const rb = document.getElementById('restart-btn');
-			if(rb) {
-				rb.innerHTML = "🔄 Rinizia";
-				rb.classList.remove('glow');
-				rb.onclick = restartQuiz;
-			}
-			document.getElementById('progress-bar').style.width = '0%';
-			document.getElementById('badge-r').innerText = "Risposte: 0/0";
-			
-			// 5. Cambio schermata
-			const ceciRow = document.getElementById('ceci-row-container');
-			if (ceciRow) ceciRow.classList.add('hidden');
-			
-			document.getElementById('submit-exam').classList.add('hidden');
-			document.getElementById('scroll-index').classList.add('hidden-index');
-			document.getElementById('quiz-header').classList.add('hidden');
-			document.getElementById('prog-cont').classList.add('hidden');
-			document.getElementById('quiz-container').innerHTML = '';
-			document.getElementById('home-screen').classList.remove('hidden');
-			
-			window.scrollTo(0,0); 
 		}
 
 		function restartQuiz() { 
+			// Sostituito confirm nativo con la modale sfuocata
 			if (Object.keys(answersGiven).length > 0 && !esameFinito && currentMode !== 'errors') {
-				if (!confirm("Vuoi riniziare il quiz attuale?")) return;
+				mostraConfirm("Vuoi riniziare il quiz attuale?", function() {
+					startQuiz(currentMode); // Parte solo se l'utente preme "Conferma"
+				});
+			} else {
+				startQuiz(currentMode);
 			}
-			startQuiz(currentMode); 
 		}
 
 		// Funzione per saltare alla domanda specifica
@@ -1643,12 +2040,14 @@
 		}
 
 		function resetErrori() {
-			if(confirm("Vuoi svuotare il salvadanaio degli errori?")) {
+			// Sostituito confirm nativo con la modale sfuocata
+			mostraConfirm("Vuoi svuotare il salvadanaio degli errori?", function() {
+				// Parte solo se l'utente preme "Conferma"
 				localStorage.setItem('quiz_errori', "[]");
 				aggiornaContatoreErrori();
 				window.scrollTo(0,0);
 				goHome(true);
-			}
+			});
 		}
 
 		// --- LOGICA MODALITÀ CECI ---
@@ -1688,7 +2087,7 @@
 			} else {
 				// Se non era selezionato, controlla il limite massimo di 40
 				if (ceciSelectedIndices.length >= 40) {
-					alert("Puoi selezionare al massimo 40 domande per la Modalità Cecilia!");
+					mostraAlert("Puoi selezionare al massimo 40 domande per la Modalità Cecilia!");
 					return;
 				}
 				ceciSelectedIndices.push(index);
@@ -1702,7 +2101,7 @@
 		function avviaModalitaCeci() {
 			const count = ceciSelectedIndices.length;
 			if (count < 5 || count > 40) {
-				alert("Seleziona da un minimo di 5 a un massimo di 40 domande per la Modalità Cecilia! 🧮");
+				mostraAlert("Seleziona da un minimo di 5 a un massimo di 40 domande per la Modalità Cecilia! 🧮");
 				return;
 			}
 			// Ordina gli indici in modo crescente per avere le domande in ordine numerico ordinato
@@ -1736,6 +2135,15 @@
 							behavior: 'smooth', 
 							block: 'start' 
 						});
+
+						if (window.innerWidth <= 600) { // Si attiva solo se lo schermo è da smartphone
+							const dotsContainer = document.getElementById('ceci-header-dots');
+							const toggleBtn = document.getElementById('ceci-toggle-menu');
+							if (dotsContainer && toggleBtn) {
+								dotsContainer.classList.remove('menu-aperto');
+								toggleBtn.innerText = "🧮 Mostra Mappa Domande";
+							}
+						}
 					}
 				};
 
@@ -1768,6 +2176,23 @@
 			hDot.style.setProperty('color', 'white', 'important');
 		}
 
+		// Funzione per aprire/chiudere la griglia Ceci su smartphone
+		function toggleCeciMobileMenu() {
+			const dotsContainer = document.getElementById('ceci-header-dots');
+			const toggleBtn = document.getElementById('ceci-toggle-menu');
+			
+			if (!dotsContainer || !toggleBtn) return;
+
+			// Attiva o disattiva la classe CSS che mostra i pallini
+			const isOpen = dotsContainer.classList.toggle('menu-aperto');
+			
+			// Cambia il testo del pulsante in base allo stato
+			if (isOpen) {
+				toggleBtn.innerText = "✖️ Nascondi Mappa Domande";
+			} else {
+				toggleBtn.innerText = "🧮 Mostra Mappa Domande";
+			}
+		}
 		
 		console.log("%c🚜 Quiz Patentino %cby LuxR & Gemini AI", 
 			"color: #e67e22; font-weight: bold; font-size: 16px;", 
