@@ -1,17 +1,30 @@
 
 <!-- 
 	============================================================================
-	PROJECT:    Simulatore Quiz Patentino Fitosanitario
-	VERSION:    1.3 (Frosted Glass & Mobile UI Update)
+	PROJECT:    Simulatore Quiz Patentino Fitosanitario (Emilia-Romagna)
+	VERSION:    1.4 (UI Refinement & Mobile Safe Area Update)
 	AUTHOR:     Luciano
-	COLLAB:     Sviluppato in collaborazione con Google Gemini AI
-	RESOURCES:  Quesiti ufficiali Regione Emilia-Romagna (Guida 2016 rev.01/18)
-	LICENSE:    Strettamente didattico e senza scopo di lucro
-	BUILD DATE: Maggio 2026
-	NOTES:      Struttura mappatura moduli e navigazione rapida (194 domande).
-	            Interfaccia asincrona con popup sfocati nativi in Dark Mode.
-	            Feedback tattili dinamici e timer smart post-click per gli errori.
-	            Griglia Cecilia a comparsa salva-spazio ottimizzata per mobile.
+	COLLAB:     Gemini 3.5 Flash AI & Gwen3.7 AI
+	LICENSE:    Didattico / No Profit / CC-BY 4.0 (Regione E-R)
+	BUILD DATE: Giugno 2026
+	
+	DESCRIPTION:
+	Applicativo web standalone (single-file HTML/CSS/JS) per lo studio e la 
+	simulazione dell'esame di abilitazione all'acquisto e utilizzo dei prodotti 
+	fitosanitari. Include l'intero database di 194 quesiti ufficiali mappati 
+	per moduli, unità didattiche e pagine del manuale di riferimento.
+	
+	TECHNICAL & UX FEATURES:
+	• Interfaccia "Glass-like" nativa con backdrop-filter e soft border (0.2 opacity).
+	• Barra di progresso dinamica a soglie cromatiche (85%→Verde | 50%→Rosso).
+	• Modalità Esame con timer countdown e Safe Area iOS (Home Indicator) ottimizzata.
+	• Griglia "Cecilia" interattiva per selezioni custom (5-40 domande).
+	• Hover states protetti da @media (hover:hover) per evitare focus touch.
+	• Dark Mode persistente via localStorage con palette ad alto contrasto.
+	• Popup modali nativi (<dialog>) con sfocatura backdrop e animazioni CSS.
+	
+	RESOURCES:
+	Quesiti tratti dalla Guida al Patentino 2016 (rev. 01/18), Regione Emilia-Romagna.
 	============================================================================
 -->
 
@@ -21,9 +34,11 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 	<meta name="robots" content="noindex, nofollow">
-
 	<title>Quiz Patentino</title>
 	<style>
+		/* ============================================================================
+		   1. VARIABILI E RESET
+		   ============================================================================ */
 		:root {
 			--primary: #2c3e50;
 			--correct: #27ae60;
@@ -33,6 +48,11 @@
 			--bg: #f4f7f6;
 		}
 
+		.hidden { display: none !important; }
+
+		/* ============================================================================
+		   2. STRUTTURA BASE - BODY
+		   ============================================================================ */
 		body {
 			font-family: 'Segoe UI', system-ui, sans-serif;
 			margin: 0;
@@ -40,22 +60,26 @@
 			display: flex;
 			flex-direction: column;
 			min-height: 100vh;
-
 			font-size: 16px;
-			overflow-x: hidden; /* Evita solo lo scroll orizzontale fastidioso */
+			overflow-x: hidden;
 		}
 
-		/* HEADER PIÙ ALTO E SPAZIOSO */
+		/* ============================================================================
+		   3. HEADER
+		   ============================================================================ */
 		header { 
-			background: #fff; 
-			border-bottom: 1px solid #ddd; 
+			/* Bianco semi-trasparente invece di bianco puro */
+			background: rgba(255, 255, 255, 0.95); 
+			border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 			position: sticky; 
 			top: 0; 
 			width: 100%; 
 			z-index: 1000;
-			box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-			height: auto !important; /* Forza l'header a stringersi attorno ai pulsanti */
+			box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+			backdrop-filter: blur(12px);
+			-webkit-backdrop-filter: blur(12px); /* Per Safari/iOS */
 		}
+
 		.header-content { 
 			max-width: 1200px; 
 			margin: 0 auto; 
@@ -63,41 +87,88 @@
 			display: flex; 
 			justify-content: space-between; 
 			align-items: center; 
-			
 			min-height: 125px;
 			padding: 12px 20px;
 			box-sizing: border-box;
 		}
 
 		.h-left { display: flex; gap: 10px; flex: 1; }
-		
 		.h-center { flex: 1; display: flex; justify-content: center; }
-		#timer-box { font-family: 'Courier New', Courier, monospace; font-size: 2em; color: #c0392b; font-weight: bold; background: #fff1f0; padding: 5px 20px; border-radius: 10px; border: 1px solid #ffccc7; }
-
-		.h-right { flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-		.mode-title { font-weight: 800; color: var(--primary); font-size: 1.1em; text-transform: uppercase; }
 		
+		#timer-box { 
+			font-family: 'Courier New', Courier, monospace; 
+			font-size: 2em; 
+			color: #c0392b; 
+			font-weight: bold; 
+			background: #fff1f0; 
+			padding: 5px 20px; 
+			border-radius: 10px; 
+			border: 1px solid #ffccc7; 
+		}
+
+		.h-right { 
+			flex: 1; 
+			display: flex; 
+			flex-direction: column; 
+			align-items: flex-end; 
+			gap: 8px; 
+		}
+
+		.mode-title { 
+			font-weight: 800; 
+			color: var(--primary); 
+			font-size: 1.1em; 
+			text-transform: uppercase; 
+		}
+
 		.stats-row { display: flex; gap: 8px; }
-		.badge { padding: 5px 12px; border-radius: 6px; color: white; font-weight: bold; font-size: 0.9em; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+		
+		.badge { 
+			padding: 5px 12px; 
+			border-radius: 6px; 
+			color: white; 
+			font-weight: bold; 
+			font-size: 0.9em; 
+			white-space: nowrap; 
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+		}
 		.bg-correct { background: var(--correct); }
 		.bg-wrong { background: var(--wrong); }
 		.bg-neutral { background: #7f8c8d; }
 
+		/* Bottoni nell'header */
+		.h-left .btn {
+			padding: 10px 15px;
+			cursor: pointer;
+			font-weight: bold;
+			border-radius: 8px;
+			border: 1px solid rgba(0,0,0,0.2);
+			background-color: #ffffff;
+			color: #2c3e50;
+			transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+		}
+		.h-left .btn:active { transform: scale(0.98); }
+
+		/* ============================================================================
+		   4. PROGRESS BAR
+		   ============================================================================ */
 		.progress-container { 
 			width: 100%; 
-			height: 8px; 
+			height: 5px; 
 			background: #eee; 
 			z-index: 999;
-			position: relative; /* Prende lo spazio subito sotto l'ultimo elemento dell'header */
+			position: relative;
 			top: 0;
 		}
-
 		#progress-bar { height: 100%; width: 0%; background: #95a5a6; transition: all 0.5s ease; }
 
+		/* ============================================================================
+		   5. HOME SCREEN
+		   ============================================================================ */
 		#home-screen {
 			flex-grow: 1;
 			display: flex;
-			flex-direction: column; /* Cambiato a column per far stare il footer sotto */
+			flex-direction: column;
 			align-items: center;
 			justify-content: center;
 			padding: 10px 20px; 
@@ -105,24 +176,68 @@
 			box-sizing: border-box;
 			margin-top: 40px;
 		}
+
 		.menu-card {
 			background: white;
-			padding: 20px; /* Ridotto da 50 a 30 */
+			padding: 25px;
 			border-radius: 25px;
-			box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+			box-shadow: 0 15px 40px rgba(0,0,0,0.08);
 			text-align: center;
 			width: 100%;
 			max-width: 480px;
+			border: 1px solid rgba(0, 0, 0, 0.06);
 		}
 
-		.menu-card h1 {
-			color: var(--primary);
-			margin-bottom: 15px; /* Ridotto da 40 a 15 */
-			font-size: 2em;
+		/* Header interno alla card (Titolo + Bottoni extra) */
+		.home-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 20px;
 		}
+		.home-title {
+			margin: 0;
+			font-size: 1.8em;
+			color: var(--primary);
+		}
+		.btn-extra { display: flex; gap: 8px; }
+		.btn-icon {
+			padding: 8px 12px;
+			cursor: pointer;
+			font-size: 1.1em;
+			border-radius: 8px;
+			border: 1px solid rgba(0,0,0,0.2);
+			background-color: #fff;
+			color: #2c3e50;
+			transition: background 0.2s;
+		}
+
+		/* Badge contatore errori */
+		#error-count {
+			font-size: 0.6em;
+			position: absolute;
+			top: -5px;
+			right: -5px;
+			background: var(--wrong);
+			color: white;
+			border-radius: 50%;
+			padding: 2px 6px;
+			display: none; /* Nascosto di default */
+			font-family: sans-serif;
+		}
+		/* Classe aggiunta da JS quando ci sono errori */
+		#error-count.has-errors {
+			display: block;
+		}
+
+		.menu-card h3 {
+			color: #555;
+			margin-bottom: 20px;
+		}
+
 		.btn-main, .btn-exam {
 			width: 100%;
-			padding: 16px; /* Leggermente più basso */
+			padding: 16px;
 			color: white;
 			border: none;
 			border-radius: 12px;
@@ -130,22 +245,44 @@
 			cursor: pointer;
 			font-weight: bold;
 			font-size: 1.1em;
+			transition: filter 0.2s, background-color 0.2s ease, transform 0.1s ease !important;
 		}
+		.btn-main { background: linear-gradient(to bottom, #5d6d7e, #34495e); border: none; }
+		.btn-exam { background: linear-gradient(to bottom, #af7ac5, #8e44ad); border: none; margin-bottom: 0; }
 
-		.btn-main { background: var(--primary); }
-		.btn-exam { background: #8e44ad; margin-bottom: 0; }
+		/* Bottoni Moduli Colorati */
+		.modules-row {
+			display: flex;
+			gap: 8px;
+			margin: 12px 0;
+		}
+		.btn-mod {
+			flex: 1;
+			padding: 10px;
+			font-size: 0.8em;
+			margin-bottom: 0;
+			color: white;
+			border: none;
+			border-radius: 12px;
+			cursor: pointer;
+			font-weight: bold;
+			transition: filter 0.2s, background-color 0.2s ease, transform 0.1s;
+		}
+		.btn-mod-1 { background: linear-gradient(to bottom, #f39c12, #d35400); color: #ffffff; border: none; }
+		.btn-mod-2 { background: linear-gradient(to bottom, #27ae60, #1e8449); color: #ffffff; border: none; }
+		.btn-mod-3 { background: linear-gradient(to bottom, #2980b9, #1f618d); color: #ffffff; border: none; }
+		.btn-mod:active { transform: translateY(0) scale(0.98); filter: brightness(0.9); }
+
 		.rand-box {
 			background: #f1f4f9;
-			padding: 15px 20px; /* Compattato */
+			padding: 15px 20px;
 			border-radius: 15px;
 			margin-bottom: 15px;
 			border: 1px solid #dce4f0;
 		}
-
 		.rand-box p { margin: 0 0 10px 0; font-weight: bold; color: #444; }
-
 		.rand-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
-
+		
 		#rand-num {
 			width: 65px;
 			padding: 10px;
@@ -155,103 +292,123 @@
 			font-size: 1.1em;
 			font-weight: bold;
 		}
-
 		.btn-rand {
 			padding: 10px 20px;
-			background: var(--primary);
+			background: linear-gradient(to bottom, #5dade2, #2e86c1);
 			color: white;
 			border: none;
 			border-radius: 10px;
 			cursor: pointer;
 			font-weight: bold;
+			transition: background 0.2s, transform 0.1s;
+			border: none; 
 		}
 
-		.btn-main, .btn-rand, .btn-exam {
-			transition: background-color 0.2s ease, transform 0.1s ease !important;
+		/* Active effects generali bottoni home */
+		.btn-main:active, .btn-rand:active, .btn-exam:active, .btn-ceci:active {
+			transform: translateY(0) scale(0.98);
+			filter: brightness(0.9);
 		}
 
-		/* HOVER (PC): Si illuminano di un tono più chiaro */
-		.btn-main:hover, .btn-rand:hover {
-			background-color: #34495e !important; /* Più luminoso di #2c3e50 */
+		/* Box Selezione Ceci */
+		.ceci-selection-title {
+			font-weight: bold;
+			margin-bottom: 8px;
+			color: #16a085;
+			font-size: 0.9em;
+		}
+		.ceci-footer {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		.ceci-label {
+			font-size: 0.85em;
+			font-weight: bold;
+			color: #555;
+		}
+		.ceci-count-val { color: #16a085; }
+		.btn-ceci-start {
+			background: #16a085;
+			margin: 0;
+			padding: 10px 20px;
 		}
 
-		.btn-exam:hover {
-			background-color: #9b59b6 !important; /* Più luminoso di #8e44ad */
+		/* Righe modulo/unità info */
+		.row-modulo, .row-unita {
+			display: flex;
+			align-items: flex-start;
+			padding: 8px 15px;
+			color: #9f3e0a;
+			line-height: 1.3;
+			font-weight: bold;
+			font-size: 0.85rem;
 		}
+		.label-box { min-width: 85px; text-transform: uppercase; flex-shrink: 0; margin-right: 2px; }
+		.desc-box { flex: 1; }
+		.info-pagine-box { padding: 12px 15px; color: #444; font-size: 0.95rem; }
 
-		.btn-ceci:hover {
-			background-color: #1abc9c !important; /* Si illumina di un verde acqua più acceso del tuo #16a085 */
-		}
-
-		/* ACTIVE (Mobile): Si contraggono sotto il dito (Ceci lo fa già per conto suo) */
-		.btn-main:active, .btn-rand:active, .btn-exam:active {
-			transform: scale(0.98) !important;
-		}
-
-		/* 2. Mini Pulsanti dei Moduli (MOD 1, MOD 2, MOD 3) */
-		#home-screen .btn-main[style*="background"] {
-			transition: filter 0.2s ease, transform 0.1s ease !important;
-		}
-		#home-screen .btn-main[style*="background"]:hover {
-			filter: brightness(1.1); /* Accende la luce interna del colore */
-		}
-		#home-screen .btn-main[style*="background"]:active {
-			transform: scale(0.96) !important;
-		}
-
-		/* 3. Icone Minimali in Alto (Giorno/Notte con il tuo nuovo Title, e Ripassa Errori) */
-		#home-screen .btn {
-			transition: background-color 0.2s ease, transform 0.1s ease !important;
-		}
-		#home-screen .btn:hover {
-			background-color: rgba(0, 0, 0, 0.05) !important; /* Crea l'alone circolare */
-		}
-		#home-screen .btn:active {
-			transform: scale(0.92) !important;
-		}
-
-		header .btn {
-			transition: background-color 0.2s ease, transform 0.1s ease !important;
-		}
-
-		/* HOVER (PC): Crea uno sfondo grigio chiaro soft al passaggio del mouse */
-		header .btn:hover {
-			background-color: #f1f3f5 !important;
-			color: #2c3e50 !important;
-		}
-
-		/* ACTIVE (Mobile): Micro-rimbalzo del 2% al tocco del dito */
-		header .btn:active {
-			transform: scale(0.98) !important;
-		}
-
-		/* DOMANDE PIÙ GRANDI */
+		/* ============================================================================
+		   6. QUIZ CONTAINER - DOMANDE E OPZIONI
+		   ============================================================================ */
 		#quiz-container { max-width: 850px; margin: 20px auto 80px; padding: 0 20px; }
 
-		.question-box { background: white; padding: 30px; margin-bottom: 30px; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border-left: 6px solid transparent; }
+		.question-box { 
+			background: white; 
+			padding: 30px; 
+			margin-bottom: 30px; 
+			border-radius: 18px; 
+
+			border-top: 1px solid rgba(0, 0, 0, 0.06);
+			border-right: 1px solid rgba(0, 0, 0, 0.06);
+			border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+			border-left: 6px solid transparent; 
+		}
+
 		.question-box.fade { opacity: 0.6; pointer-events: none; }
 		.question-box.fade .hint-btn { pointer-events: auto; }
 		
 		.q-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
 		.q-text { font-weight: 700; font-size: 1.2em; color: var(--primary); line-height: 1.5; flex: 1; }
-		.hint-btn { background: #e8f4fd; color: var(--exam-blue); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-weight: bold; font-size: 1.2em; border: 1px solid #d6eaf8; margin-left: 15px; transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease !important; }
-		.hint-btn:hover { background-color: #d4ecfc !important; border-color: #1a73e8 !important; color: #0056b3 !important; }
+		
+		.hint-btn { 
+			background: #e8f4fd; 
+			color: var(--exam-blue); 
+			width: 38px; 
+			height: 38px; 
+			border-radius: 50%; 
+			display: flex; 
+			align-items: center; 
+			justify-content: center; 
+			cursor: pointer; 
+			flex-shrink: 0; 
+			font-weight: bold; 
+			font-size: 1.2em; 
+			border: 1px solid #d6eaf8; 
+			margin-left: 15px; 
+			transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease !important; 
+		}
 		.hint-btn:active { transform: scale(0.94) !important; }
 
 		.options { display: flex; flex-direction: column; gap: 12px; }
-		.option-btn { padding: 16px; border: 1px solid #dee2e6; border-radius: 12px; background: #fff; text-align: left; cursor: pointer; transition: 0.2s; font-size: 1.1em; }
-		.option-btn:hover { background: #f8f9fa; border-color: var(--exam-blue); }
+		.option-btn {
+			padding: 16px;
+			border: 1px solid rgba(0, 0, 0, 0.1); /* Grigio leggero */
+			border-radius: 12px;
+			background: #fff;
+			text-align: left;
+			cursor: pointer;
+			transition: 0.2s;
+			font-size: 1.1em;
+		}
+
 		.option-btn:active { transform: scale(0.98); }		
 
 		.correct { background: var(--correct) !important; color: white; border-color: var(--correct); }
 		.wrong { background: var(--wrong) !important; color: white; border-color: var(--wrong); }
 		.selected-exam { background: var(--exam-blue) !important; color: white; border-color: var(--exam-blue); }
 
-		.glow { 
-			animation: glowing 1.5s infinite; 
-			border: 1px solid var(--accent) !important; /* Opzionale: colora solo il bordo */
-		}
-
+		.glow { animation: glowing 1.5s infinite; border: 1px solid var(--accent) !important; }
 		@keyframes glowing { 
 			0% { box-shadow: 0 0 5px var(--accent); } 
 			50% { box-shadow: 0 0 25px var(--accent); } 
@@ -262,12 +419,23 @@
 			animation: flash-red 1s infinite alternate;
 			border: 2px solid var(--wrong) !important;
 		}
-
 		@keyframes flash-red {
 			from { background-color: white; }
 			to { background-color: #ffe6e6; }
 		}
 
+		.hint-text {
+			background: #e8f4fd; 
+			border-radius: 12px; 
+			margin-top: 15px;
+			padding: 0 !important; 
+			border-left: 6px solid #1a73e8 !important; 
+			box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+		}
+
+		/* ============================================================================
+		   7. FOOTER
+		   ============================================================================ */
 		footer { 
 			background: #fff; 
 			width: 100%; 
@@ -281,788 +449,275 @@
 			margin-top: 0;
 			box-sizing: border-box;
 		}
-		
-		footer a, footer a:visited { 
-			color: #1a73e8 !important; 
-			text-decoration: none !important; 
-			font-weight: bold; 
-		}
+		footer a, footer a:visited { color: #1a73e8 !important; text-decoration: none !important; font-weight: bold; }
+		footer a:active { color: #1557b0 !important; text-decoration: none !important; }
+		footer p { max-width: 800px; margin: 10px auto; line-height: 1.6; }
+		footer hr { border: 0; border-top: 1px solid #eee; margin: 0 auto 10px auto; max-width: 800px; }
 
-		footer a:hover { 
-			text-decoration: underline !important;
-			color: #1557b0 !important;
-		}
-
-		footer p {
-			max-width: 800px;
-			margin: 10px auto;
-			line-height: 1.6;
-		}
-
-		footer hr {
-			border: 0; 
-			border-top: 1px solid #eee; 
-			margin: 0 auto 10px auto; /* 15px o 10px per avvicinare il testo alla linea */
-			max-width: 800px;
-		}
-
-		footer a.download-btn-style {
-			background-color: #f8f9fa !important;
-			color: #1a73e8 !important;
-			border: 2px solid #1a73e8 !important;
-			padding: 10px 20px;
-			border-radius: 5px;
-			display: inline-block;
-			text-decoration: none !important;
-			font-weight: bold;
-			box-sizing: border-box;
-			
-			transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-		}
-
-		footer a.download-btn-style:hover, 
-		footer a.download-btn-style:active {
-			background-color: #007bff !important;
-			border-color: #1557b0 !important;
-			color: #ffffff !important;
-			text-decoration: none !important;
-		}
-
+		/* ============================================================================
+		   8. SUBMIT BUTTON & SCROLL INDEX
+		   ============================================================================ */
 		#submit-container { 
-			position: fixed;
-			bottom: 55px; /* Sopra il footer */
-			right: 20px;  /* Angolo a destra */
-			width: auto;
-			pointer-events: none;
-			z-index: 1002;
+			position: fixed; bottom: 55px; right: 20px; width: auto; pointer-events: none; z-index: 1002;
 		}
-
 		#submit-exam {
-			pointer-events: auto;
-			background: #e67e22;
-			color: white;
-			width: 60px;
-			height: 60px;
-			border-radius: 50%; /* Rende il tasto un cerchio */
+			pointer-events: auto; background: #e67e22; color: white; width: 60px; height: 60px;
+			border-radius: 50%; border: 3px solid white; box-sizing: border-box; cursor: pointer;
+			font-size: 2.5rem; transform: rotate(-25deg); display: flex; align-items: center;
+			justify-content: center; padding-left: 5px; line-height: 1;
+			box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: transform 0.2s, background 0.2s;
+		}
+		#submit-exam:active { transform: rotate(-25deg) scale(0.9); }
+
+		#scroll-index {
+			position: fixed; right: 12px; top: 55%; transform: translateY(-50%);
+			display: flex; flex-direction: column; gap: 8px; z-index: 2000; pointer-events: none;
+		}
+		.index-dot {
+			pointer-events: auto; width: 32px; height: 32px; background: rgba(44, 62, 80, 0.4);
+			color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+			font-size: 0.7rem; font-weight: bold; cursor: pointer; backdrop-filter: blur(4px);
+			transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.2);
+		}
+		.hidden-index { display: none !important; }
+		.index-dot, #submit-exam {
+			-webkit-user-select: none; -ms-user-select: none; user-select: none;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		/* ============================================================================
+		   9. DARK MODE COMPLETA
+		   ============================================================================ */
+		body.dark-mode {
+			--bg: #121212; --primary: #ffffff; --exam-blue: #3498db;
+			background-color: var(--bg); color: #e0e0e0;
+		}
+		body.dark-mode header {
+			background-color: rgba(30, 30, 30, 0.95) !important; 
+			color: #ffffff !important; 
+			border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+			backdrop-filter: blur(12px);
+			-webkit-backdrop-filter: blur(12px);
+		}
+		body.dark-mode footer,
+		body.dark-mode .menu-card {
+			background-color: rgba(30, 30, 30, 0.9) !important; 
+			color: #ffffff !important; 
+			border: 1px solid rgba(255, 255, 255, 0.08) !important;
 			
-			/* IL BORDO SUL PERIMETRO DEL CERCHIO */
-			border: 3px solid white; 
-			box-sizing: border-box; /* Mantiene il bordo dentro i 60px senza sballare le misure */
-			
-			cursor: pointer;
-			font-size: 2.5rem;
-			transform: rotate(-25deg);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			padding-left: 5px;
-			line-height: 1;
-			
-			/* Ombra che fa risaltare il cerchio col suo bordo */
-			box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
-			transition: transform 0.2s, background 0.2s;
+		}
+		body.dark-mode .question-box {
+			background-color: #1e1e1e !important; 
+			color: #ffffff !important; 
+			border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+			border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+			border-left: 6px solid rgba(255, 255, 255, 0.20) !important; 
+		}
+		body.dark-mode .hint-text {
+			background-color: #1a2530 !important;
+			color: #ffffff !important;
+			border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+			border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+			border-left: 6px solid rgba(255, 255, 255, 0.20) !important;
 		}
 
-		#submit-exam:active {
-			transform: rotate(-25deg) scale(0.9);
+		body.dark-mode .menu-card h1, body.dark-mode .menu-card h3, body.dark-mode .rand-box p { color: #ffffff !important; }
+		body.dark-mode footer hr { border-top: 1px solid #444; }
+		body.dark-mode .badge { box-shadow: 0 2px 5px rgba(0,0,0,0.4) !important; }
+		body.dark-mode .rand-box { background-color: #252525 !important; border-color: #444 !important; }
+		body.dark-mode #rand-num { background-color: #121212 !important; color: #ffffff !important; border-color: #555 !important; }
+		
+		/* Bottoni Dark Mode */
+		body.dark-mode .option-btn { background-color: #2c2c2c; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); }
+		
+		body.dark-mode .h-left .btn { background-color: #1e1e1e; color: #ffffff; border-color: rgba(255, 255, 255, 0.2); }
+		body.dark-mode .h-left .btn:active { background-color: #1a1a1a; }
+		
+		/* Icone Home Dark Mode */
+		body.dark-mode .btn-icon { background-color: #1e1e1e; color: #fff; border-color: rgba(255, 255, 255, 0.2); }
+
+		/* Scroll Index Dark */
+		body.dark-mode #scroll-index .index-dot:active {
+			background-color: #ffffff !important; color: #121212 !important; border-color: #ffffff !important;
+		}
+		body.dark-mode .info-pagine-box { color: #bbb !important; }
+
+		/* FIX BORDO ROSSO (Domande dimenticate in esame) - SENZA ANIMAZIONE */
+		body.dark-mode .missing-answer {
+			background-color: #2c1a1a !important; 
+			border: 2px solid #ff4d4d !important;
 		}
 
-		#submit-exam:hover {
-			transform: rotate(-25deg) scale(1.1);
-			background: #d35400; /* Diventa un po' più scuro quando ci passi sopra */
-		}
-		.hidden { display: none !important; }
+		body.dark-mode .badge.bg-neutral { background-color: #444; }
+		body.dark-mode #timer-box { background-color: #2c1a1a; color: #ff4d4d; border-color: #600; }
+		
+		/* SCROLLBAR  */
+		body.dark-mode .progress-container { background-color: #333 !important; }
+		body.dark-mode #progress-bar { opacity: 0.7; }
 
-		.row-modulo, .row-unita {
-			display: flex; /* Trasforma la riga in un contenitore flessibile */
-			align-items: flex-start;
-			padding: 8px 15px;
-			color: #9f3e0a;
-			line-height: 1.3;
-			font-weight: bold;
-			font-size: 0.85rem;
-		}
-
-		.label-box {
-			min-width: 85px;
-			text-transform: uppercase;
-			flex-shrink: 0;
-			margin-right: 2px;
+		/* ============================================================================
+		   10. MODALITÀ CECI
+		   ============================================================================ */
+		.btn-ceci {
+			width: 100%; padding: 16px; color: white; border: none; border-radius: 12px;
+			margin-top: 15px; cursor: pointer; font-weight: bold; font-size: 1.1em;
+			background: linear-gradient(to bottom, #1abc9c, #16a085); color: #ffffff;
+			border: none; }
+			transition: background 0.2s, transform 0.1s; 
 		}
 
-		.desc-box {
-			flex: 1;
+		#ceci-selection-box {
+			background: #fcfcfc; border: 2px dashed #16a085; border-radius: 15px;
+			padding: 15px; margin-top: 15px; animation: fadeIn 0.3s ease;
 		}
-
-		.info-pagine-box {
-			padding: 12px 15px;
-			color: #444;
-			font-size: 0.95rem;
+		.ceci-grid {
+			display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; max-height: 220px;
+			overflow-y: auto; padding: 8px; margin-bottom: 15px; border: 1px solid #ddd;
+			border-radius: 10px; background: #fff;
 		}
+		.ceci-select-dot {
+			width: 100%; aspect-ratio: 1 / 1; border-radius: 50%; border: 2px solid #ccc;
+			background: #fff; color: #333; font-size: 0.8rem; font-weight: bold;
+			display: flex; align-items: center; justify-content: center; cursor: pointer;
+			user-select: none; transition: all 0.15s ease; box-sizing: border-box;
+		}
+		.ceci-select-dot.selected { background: #16a085; color: white; border-color: #16a085; }
 
-		.hint-text {
-			background: #e8f4fd; 
-			border-radius: 12px; 
-			margin-top: 15px;
-			padding: 0 !important; 
-			border-left: 6px solid #1a73e8; 
-			box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-			animation: fadeIn 0.3s ease;
-			overflow: hidden;
+		/* Header Ceci durante quiz */
+		#ceci-row-container {
+			width: 100%; min-height: 60px; padding: 5px 15px 10px; display: flex;
+			justify-content: center; align-items: center; background: #f8f9fa;
+			border-top: 1px solid #eee; box-sizing: border-box;
+		}
+		#ceci-header-dots {
+			display: flex !important; flex-wrap: wrap !important; gap: 8px !important;
+			justify-content: center; align-items: center !important; max-width: 540px;
+			width: 100% !important; min-height: 48px !important; padding: 4px 10px;
+			box-sizing: border-box !important; white-space: normal !important;
+		}
+		#ceci-header-dots::-webkit-scrollbar { height: 4px; }
+		#ceci-header-dots::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; }
+
+		.ceci-header-dot {
+			flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
+			background: #ffffff; color: #333333; border: 2px solid #b3b3b3;
+			display: inline-flex; flex-direction: column; align-items: center;
+			justify-content: center; font-size: 0.95rem; line-height: 1.1; font-weight: bold;
+			cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+			transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box;
+		}
+		.ceci-header-dot:active { transform: scale(0.95); box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+		#ceci-toggle-menu { display: none; }
+
+		/* Dark Mode Ceci */
+		body.dark-mode #ceci-selection-box { background: #1e1e1e; border-color: #117a65; }
+		body.dark-mode .ceci-grid { background: #121212; border-color: #333; }
+		body.dark-mode .ceci-select-dot { background: #2c2c2c; color: #e0e0e0; border-color: #555; }
+		body.dark-mode .ceci-select-dot.selected { background: #117a65; color: white; border-color: #117a65; }
+		body.dark-mode #ceci-row-container { background: #1e1e1e !important; border-color: #2d2d2d !important; }
+		body.dark-mode .ceci-header-dot {
+			background: #2c2c2c !important; color: #ffffff !important;
+			border-color: #555555 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.4) !important;
+		}
+		body.dark-mode #ceci-header-dots::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+
+		/* ============================================================================
+		   11. POPUP/DIALOG CUSTOM
+		   ============================================================================ */
+		dialog#customAlert {
+			padding: 25px; border-radius: 16px; border: 1px solid #e0e0e0; max-width: 420px;
+			width: 85%; text-align: center; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+			background-color: #ffffff; color: #2c3e50; font-family: inherit; z-index: 2500;
+		}
+		dialog#customAlert p { margin: 0 0 20px 0; line-height: 1.5; font-size: 1.05rem; font-weight: 500; white-space: pre-wrap; }
+		#customAlertButtons { display: flex; gap: 12px; justify-content: center; }
+		.popup-btn {
+			padding: 10px 24px; border: none; border-radius: 8px; cursor: pointer;
+			font-weight: bold; font-size: 0.95rem; 
+			transition: background-color 0.2s ease, transform 0.1s ease;
+		}
+		.popup-btn:active { transform: scale(0.97); }
+		.popup-btn-confirm { background-color: #2980b9; color: white; }
+		.popup-btn-cancel { background-color: #e0e0e0; color: #333; }
+		dialog#customAlert::backdrop { background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+		dialog#customAlert[open] { animation: popIn 0.25s ease-out; }
+		@keyframes popIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+
+		body.dark-mode dialog#customAlert {
+			background-color: #1e1e1e !important; color: #ffffff !important;
+			border-color: #333333 !important; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+		}
+		body.dark-mode .popup-btn-cancel { background-color: #333; color: #fff; }
+		body.dark-mode dialog#customAlert::backdrop { background: rgba(0, 0, 0, 0.45); }
+
+		/* ============================================================================
+		   12. MEDIA QUERIES - RESPONSIVE
+		   ============================================================================ */
+		@media (hover: hover) {
+			.h-left .btn:hover { background-color: #f8f9fa; color: #2c3e50; border-color: var(--exam-blue); }
+			body.dark-mode .h-left .btn:hover { background-color: #2d2d2d; color: #ffffff; border-color: #444444; }
+			.btn-main:hover, .btn-rand:hover, .btn-exam:hover, .btn-ceci:hover {
+				filter: brightness(1.15);
+				transform: translateY(-1px);
+			}
+			.btn-mod:hover { filter: brightness(1.15); transform: translateY(-1px); }
+			.btn-icon:hover { background: #f0f0f0; }
+			body.dark-mode .btn-icon:hover { background-color: #2d2d2d; }
+			.option-btn:hover { background: #f8f9fa; border-color: var(--exam-blue); }
+			.hint-btn:hover { background-color: #d4ecfc !important; border-color: #1a73e8 !important; color: #0056b3 !important; }
+			body.dark-mode .option-btn:hover { background-color: #3d3d3d; border-color: var(--exam-blue); }
+			body.dark-mode .hint-btn:hover { background-color: #3a3a3a !important; border-color: #555555 !important; color: #8ab4f8 !important; }
+			#submit-exam:hover { transform: rotate(-25deg) scale(1.1); background: #d35400; }
+			.index-dot:hover { background: var(--primary); transform: scale(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+			body.dark-mode #scroll-index .index-dot:hover { background-color: #ffffff !important; color: #121212 !important; border-color: #ffffff !important; }
+			.ceci-select-dot:hover { border-color: #117a65 !important; }
+			body.dark-mode .ceci-select-dot:hover { border-color: #0e6251 !important; }
+			.ceci-header-dot:hover { transform: scale(1.05); box-shadow: 0 4px 8px rgba(0,0,0,0.12); }
+			footer a:hover { text-decoration: underline !important; color: #1557b0 !important; }
+			.popup-btn-confirm:hover { background-color: #1f618d; }
+			.popup-btn-cancel:hover { background-color: #d5d5d5; }
+			body.dark-mode .popup-btn-confirm:hover { background-color: #3498db; }
+			body.dark-mode .popup-btn-cancel:hover { background-color: #444; }
 		}
 
 		@media (max-width: 850px) {
-			.header-content { 
-				flex-wrap: wrap; 
-			}
-			/* Forza il timer a scendere sotto al centro occupando tutta la riga */
-			.h-center { 
-				flex-basis: 100%; 
-				order: 3; 
-				margin-top: 10px; 
-				display: flex;
-				justify-content: center;
-			}
-			/* Mantiene i bottoni a sinistra e i badge a destra grandi sulla prima riga */
-			.h-left { order: 1; }
-			.h-right { order: 2; }
-		}
-
-		@media (min-width: 601px) and (max-width: 850px) {
 			.header-content { flex-wrap: wrap; }
-			.h-center { 
-				order: 3; 
-				flex-basis: 100%; 
-				margin-top: 10px; 
-				display: flex;
-				justify-content: center;
-			}
+			.h-center { flex-basis: 100%; order: 3; margin-top: 10px; display: flex; justify-content: center; }
 			.h-left { order: 1; }
 			.h-right { order: 2; }
 		}
 
 		@media (max-width: 600px) {
 			.header-content { flex-wrap: wrap; padding: 8px 10px; }
-			.h-left { order: 1; } .h-right { order: 2; }
-			
-			/* 🚀 Il timer si prende tutta la riga sotto e si centra */
-			.h-center { 
-				order: 3; 
-				flex-basis: 100%; 
-				margin-top: 10px; 
-				display: flex;
-				justify-content: center;
-			}
-			
+			.h-left { gap: 5px; order: 1; }
+			.h-left .btn { padding: 8px 10px; font-size: 0.9em; }
+			.h-right { align-items: flex-end; gap: 4px; order: 2; }
+			.mode-title { font-size: 1.1em; }
+			.h-center { order: 3; flex-basis: 100%; margin-top: 10px; display: flex; justify-content: center; }
 			#quiz-container { margin-top: 20px; margin-bottom: 100px; }
-
-			.menu-card {
-				margin-bottom: 30px; 
-			}
-
+			.menu-card { margin-bottom: 30px; }
 			footer { padding: 20px 10px; font-size: 0.75rem; }
-
-			#submit-container {
-				bottom: 42px; 
-				right: 15px;  
-				left: auto;
-			}
-			#submit-exam {
-				width: 55px;  
-				height: 55px;
-				font-size: 2rem;
-				border: 2px solid white; 
-			}
-			#submit-exam:hover {
-				background: #e67e22; 
-				transform: rotate(-25deg) scale(1); 
-			}
-			#submit-exam:active {
-				transform: rotate(-25deg) scale(0.9);
-			}
+			#submit-container { bottom: 65px; right: 15px; left: auto; }
+			#submit-exam { width: 55px; height: 55px; font-size: 2rem; border: 2px solid white; }
+			#submit-exam:active { transform: rotate(-25deg) scale(0.9); }
 			
-			/* 🚀 I tasti Home e Rinizia tornano a diventare quadrati e compatti */
-			.h-left { 
-				gap: 5px; 
-			}
-			.h-left .btn {
-				padding: 8px 10px; 
-				font-size: 0.9em;
-			}
-			
-			.h-right {
-				align-items: flex-end;
-				gap: 4px;
-			}
-			
-			/* Il titolo rimane grande e visibile */
-			.mode-title {
-				font-size: 1.1em; 
-			}
-
-			/* Ceci Tasto Mappa Domande (SMARTPHONE) */
-			#ceci-row-container {
-				flex-direction: column !important;
-				padding: 8px !important;
-			}
-
-			/* Stile del pulsante Apri/Chiudi */
-			#ceci-row-container {
-				flex-direction: column !important;
-				padding: 8px !important;
-			}
-
-			/* Stile del pulsante Apri/Chiudi */
+			#ceci-row-container { flex-direction: column !important; padding: 8px !important; }
 			#ceci-toggle-menu {
-				display: block !important; /* Diventa visibile solo su smartphone */
-				width: 100%;
-				max-width: 320px;
-				padding: 8px 15px;
-				background-color: #16a085; /* Il tuo verde acqua ceci */
-				color: white;
-				border: none;
-				border-radius: 8px;
-				font-weight: bold;
-				cursor: pointer;
-				font-size: 0.9rem;
-				margin-bottom: 5px;
-				box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-				transition: transform 0.1s;
+				display: block !important; width: 100%; max-width: 320px; padding: 8px 15px;
+				background-color: #16a085; color: white; border: none; border-radius: 8px;
+				font-weight: bold; cursor: pointer; font-size: 0.9rem; margin-bottom: 5px;
+				box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.1s;
 			}
-			#ceci-toggle-menu:active {
-				transform: scale(0.98);
-			}
-
+			#ceci-toggle-menu:active { transform: scale(0.98); }
 			header #ceci-header-dots {
-				display: none !important; 
-				max-height: 250px;
-				overflow-y: auto;
-				border-top: 1px solid rgba(0, 0, 0, 0.1);
-				padding-top: 10px !important;
-				margin-top: 5px;
+				display: none !important; max-height: 250px; overflow-y: auto;
+				border-top: 1px solid rgba(0, 0, 0, 0.1); padding-top: 10px !important; margin-top: 5px;
 			}
-
-			/* Quando l'utente clicca sul tasto, questa classe riattiva la griglia */
-			header #ceci-header-dots.menu-aperto {
-				display: flex !important;
-			}
-			
-			/* Supporto Dark Mode per il tasto mobile */
-			body.dark-mode #ceci-toggle-menu {
-				background-color: #117a65;
-			}
-			body.dark-mode header #ceci-header-dots {
-				border-top-color: rgba(255, 255, 255, 0.1) !important; /* Diventa scura e trasparente di notte */
-			}
-		}
-
-		/* Barra laterale per lo scroll veloce */
-		#scroll-index {
-			position: fixed;
-			right: 12px;
-			top: 55%;
-			transform: translateY(-50%);
-			display: flex;
-			flex-direction: column;
-			gap: 8px;
-			z-index: 2000;
-			pointer-events: none; /* Non disturba finché non clicchi sui singoli pallini */
-		}
-
-		.index-dot {
-			pointer-events: auto;
-			width: 32px;
-			height: 32px;
-			background: rgba(44, 62, 80, 0.4); /* Grigio scuro trasparente */
-			color: white;
-			border-radius: 50%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 0.7rem;
-			font-weight: bold;
-			cursor: pointer;
-			backdrop-filter: blur(4px);
-			transition: all 0.2s ease;
-			border: 1px solid rgba(255,255,255,0.2);
-		}
-
-		.index-dot:hover {
-			background: var(--primary);
-			transform: scale(1.1);
-			box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-		}
-
-		/* Nasconde l'indice di default */
-		.hidden-index { 
-			display: none !important; 
-		}
-		
-		/* Fix double-click */
-		.index-dot, #submit-exam {
-			-webkit-user-select: none; /* Safari */
-			-ms-user-select: none;     /* IE 10+ */
-			user-select: none;         /* Standard */
-			-webkit-tap-highlight-color: transparent; /* Toglie il lampo blu al tocco su Android/iOS */
-		}
-
-		/* --- DARK MODE COMPLETA E OTTIMIZZATA --- */
-		body.dark-mode {
-			--bg: #121212;
-			--primary: #ffffff;
-			--exam-blue: #3498db;
-			background-color: var(--bg);
-			color: #e0e0e0;
-		}
-
-		/* Header, Footer e Contenitori Principali */
-		body.dark-mode header, 
-		body.dark-mode footer, 
-		body.dark-mode .menu-card, 
-		body.dark-mode .question-box,
-		body.dark-mode .hint-text {
-			background-color: #1e1e1e !important;
-			color: #ffffff !important;
-			border-color: #333 !important;
-		}
-
-		/* Testi della Home (Titoli e Sottotitoli) */
-		body.dark-mode .menu-card h1, 
-		body.dark-mode .menu-card h3, 
-		body.dark-mode .rand-box p {
-			color: #ffffff !important;
-		}
-		
-		body.dark-mode footer hr {
-			border-top: 1px solid #444;
-		}
-
-		body.dark-mode footer a.download-btn-style {
-			background-color: #2a2a2a !important;
-			color: #e0e0e0 !important;
-			border: 2px solid #b3b3b3 !important;
-		}
-
-		body.dark-mode footer a.download-btn-style:hover, 
-		body.dark-mode footer a.download-btn-style:active {
-			background-color: #0056b3 !important;
-			border-color: #66b2ff !important;
-			color: #ffffff !important;
-		}
-
-		body.dark-mode .badge {
-			box-shadow: 0 2px 5px rgba(0,0,0,0.4) !important;
-		}
-
-		/* Box Casuali e Input */
-		body.dark-mode .rand-box {
-			background-color: #252525 !important;
-			border-color: #444 !important;
-		}
-
-		body.dark-mode #rand-num {
-			background-color: #121212 !important;
-			color: #ffffff !important;
-			border-color: #555 !important;
-		}
-
-		/* Bottoni delle Opzioni */
-		body.dark-mode .option-btn {
-			background-color: #2c2c2c;
-			color: #ffffff;
-			border-color: #444;
-		}
-
-		body.dark-mode .option-btn:hover {
-			background-color: #3d3d3d;
-			border-color: var(--exam-blue);
-		}
-
-		body.dark-mode .btn-main, 
-		body.dark-mode .btn-rand {
-			color: #ffffff !important;
-		}
-
-		body.dark-mode .btn-main:not([style*="background"]), 
-		body.dark-mode .btn-rand:not([style*="background"]) {
-			background-color: #2c3e50 !important;
-			border: 1px solid #444;
-		}
-
-		/* FIX EFFETTI HOVER NOTTURNI */
-		body.dark-mode .btn-main:not([style*="background"]):hover, 
-		body.dark-mode .btn-rand:not([style*="background"]):hover {
-			background-color: #3d566e !important; 
-		}
-		body.dark-mode .btn-exam:hover {
-			background-color: #7d3c98 !important; 
-		}
-		body.dark-mode #home-screen .btn:hover {
-			background-color: rgba(255, 255, 255, 0.1) !important;
-		}
-
-		body.dark-mode header .btn:hover {
-			background-color: #2d2d2d !important;
-			color: #ffffff !important;
-		}
-
-		body.dark-mode .hint-btn:hover {
-			background-color: #3a3a3a !important;
-			border-color: #555555 !important;
-			color: #8ab4f8 !important;
-		}
-
-		body.dark-mode #scroll-index .index-dot:hover,
-		body.dark-mode #scroll-index .index-dot:active {
-			background-color: #ffffff !important;
-			color: #121212 !important;
-			border-color: #ffffff !important;
-		}
-
-		/* Fix per i suggerimenti (info pagine) */
-		body.dark-mode .info-pagine-box {
-			color: #bbb !important;
-		}
-
-		/* FIX GLOW ROSSO (Domande dimenticate in esame) */
-		/* Usiamo un'ombra esterna pulsante così il testo dentro rimane leggibile */
-		body.dark-mode .missing-answer {
-			background-color: #2c1a1a !important; 
-			border: 2px solid #ff4d4d !important;
-			animation: flash-red-dark 1s infinite alternate;
-		}
-
-		@keyframes flash-red-dark {
-			from { box-shadow: 0 0 5px #ff4d4d; }
-			to { box-shadow: 0 0 20px #ff4d4d; }
-		}
-
-		/* Badge statistiche in Dark Mode */
-		body.dark-mode .badge.bg-neutral {
-			background-color: #444;
-		}
-
-		/* Timer in Dark Mode */
-		body.dark-mode #timer-box {
-			background-color: #2c1a1a;
-			color: #ff4d4d;
-			border-color: #600;
-		}
-
-		/* ============================================================================
-		   STILI ESCLUSIVI - MODALITÀ CECI
-		   ============================================================================ */
-
-		/* 1. PULSANTI E SELEZIONE NELLA SCHERMATA INIZIALE (HOME) */
-		.btn-ceci {
-			width: 100%;
-			padding: 16px;
-			color: white;
-			border: none;
-			border-radius: 12px;
-			margin-top: 15px;
-			cursor: pointer;
-			font-weight: bold;
-			font-size: 1.1em;
-			background: #16a085; /* Colore verde acqua */
-			transition: background 0.2s, transform 0.1s;
-		}
-
-		.btn-ceci:active {
-			transform: scale(0.98);
-		}
-
-		#ceci-selection-box {
-			background: #fcfcfc;
-			border: 2px dashed #16a085;
-			border-radius: 15px;
-			padding: 15px;
-			margin-top: 15px;
-			animation: fadeIn 0.3s ease;
-		}
-
-		.ceci-grid {
-			display: grid;
-			grid-template-columns: repeat(10, 1fr); /* Esattamente 10 pallini per riga */
-			gap: 6px;
-			max-height: 220px; /* Limita l'altezza per evitare che occupi troppa pagina */
-			overflow-y: auto;  /* Scroll verticale interno */
-			padding: 8px;
-			margin-bottom: 15px;
-			border: 1px solid #ddd;
-			border-radius: 10px;
-			background: #fff;
-		}
-
-		/* Il pallino di selezione dentro la griglia della Home */
-		.ceci-select-dot {
-			width: 100%;
-			aspect-ratio: 1 / 1; /* Garantisce la forma quadrata di partenza per il cerchio */
-			border-radius: 50%;   /* Lo trasforma in un cerchio perfetto */
-			border: 2px solid #ccc;
-			background: #fff;
-			color: #333;
-			font-size: 0.8rem;
-			font-weight: bold;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			cursor: pointer;
-			user-select: none;
-			transition: all 0.15s ease;
-			box-sizing: border-box;
-		}
-
-		/* Stato attivo del pallino nella Home (Sfondo pieno e testo bianco) */
-		.ceci-select-dot.selected {
-			background: #16a085;
-			color: white;
-			border-color: #16a085;
-		}
-
-		.ceci-select-dot {
-			transition: border-color 0.15s ease !important;
-		}
-
-		.ceci-select-dot:hover {
-			border-color: #117a65 !important; /* Un tono più scuro e deciso del tuo #16a085 */
-		}
-
-
-		/* 2. INTERFACCIA DURANTE IL QUIZ (HEADER DEDICATO) */
-
-		/* La riga contenitore che ospita i pallini, situata sotto l'header principale */
-		#ceci-row-container {
-			width: 100%;
-			min-height: 60px; /* Altezza di sicurezza per accogliere i pallini */
-			padding: 5px 15px 10px;
-			display: flex;
-			justify-content: center; /* Centra la riga dei pallini su PC */
-			align-items: center;
-			background: #f8f9fa; /* Grigio leggero per separarlo dall'header bianco */
-			border-top: 1px solid #eee;
-			box-sizing: border-box;
-		}
-
-		/* Il vassoio scorrevole lineare all'interno della riga */
-		#ceci-header-dots {
-			display: flex !important;
-			flex-wrap: wrap !important;     /* FORZA I PALLINI ANDARE A CAPO SE FINISCE LO SPAZIO */
-			gap: 8px !important;            /* Spazio uniforme tra i pallini */
-			justify-content: center;        /* Centra i pallini nella riga */
-			align-items: center !important;
-			
-			/* --- MODIFICHE PER LA GRIGLIA FLUIDA --- */
-			max-width: 540px;               /* Larghezza ideale per contenere esattamente 10 pallini da 44px + gap */
-			width: 100% !important;
-			min-height: 48px !important;
-			
-			padding: 4px 10px;
-			box-sizing: border-box !important;
-			white-space: normal !important; /* Rimosso nowrap per permettere la discesa a capo */
-		}
-
-		/* Nasconde esteticamente la barra di scorrimento su desktop per pulizia grafica */
-		#ceci-header-dots::-webkit-scrollbar {
-			height: 4px;
-		}
-		#ceci-header-dots::-webkit-scrollbar-thumb {
-			background: rgba(0,0,0,0.15);
-			border-radius: 10px;
-		}
-
-		/* Il singolo pallino numerato all'interno dell'header di gioco */
-		.ceci-header-dot {
-			flex-shrink: 0;
-			width: 44px;    
-			height: 44px;
-			border-radius: 50%;
-			background: #ffffff;
-			color: #333333;
-			border: 2px solid #b3b3b3;
-			display: inline-flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			
-			/* --- TESTO PIÙ GRANDE E LEGGIBILE --- */
-			font-size: 0.95rem; /* Aumentato da 0.8rem per rendere i numeri molto più grandi */
-			line-height: 1.1;   /* Avvicina leggermente le due righe di testo interne */
-			
-			font-weight: bold;
-			cursor: pointer;
-			box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-			transition: transform 0.1s, box-shadow 0.1s;
-			box-sizing: border-box;
-		}
-
-		.ceci-header-dot:hover,
-		.ceci-header-dot:active {
-			transform: scale(1.05);
-			box-shadow: 0 4px 8px rgba(0,0,0,0.12);
-		}
-
-		#ceci-toggle-menu {
-			display: none;
-		}
-
-		/* 3. ADATTAMENTO E OTTIMIZZAZIONE PER COMPLETA DARK MODE */
-		body.dark-mode .btn-ceci {
-			background: #117a65; /* Sfumatura leggermente più scura del verde acqua */
-		}
-
-		body.dark-mode .btn-ceci:hover {
-			background-color: #148f77 !important; /* Verde acqua scuro ma retroilluminato per la notte */
-		}
-
-		body.dark-mode #ceci-selection-box {
-			background: #1e1e1e;
-			border-color: #117a65;
-		}
-
-		body.dark-mode .ceci-grid {
-			background: #121212;
-			border-color: #333;
-		}
-
-		body.dark-mode .ceci-select-dot {
-			background: #2c2c2c;
-			color: #e0e0e0;
-			border-color: #555;
-		}
-
-		body.dark-mode .ceci-select-dot.selected {
-			background: #117a65;
-			color: white;
-			border-color: #117a65;
-		}
-
-		body.dark-mode .ceci-select-dot:hover {
-			border-color: #0e6251 !important;
-		}
-
-		body.dark-mode #ceci-row-container {
-			background: #1e1e1e !important;
-			border-color: #2d2d2d !important;
-		}
-
-		body.dark-mode .ceci-header-dot {
-			background: #2c2c2c !important;
-			color: #ffffff !important;
-			border-color: #555555 !important;
-			box-shadow: 0 2px 4px rgba(0,0,0,0.4) !important;
-		}
-
-		body.dark-mode #ceci-header-dots::-webkit-scrollbar-thumb {
-			background: rgba(255,255,255,0.15);
-		}
-
-		/* ========================================================
-		   FINESTRA POPUP SFUOCATO CENTRATO (TEMA CHIARO)
-		   ======================================================== */
-		dialog#customAlert {
-			padding: 25px;
-			border-radius: 16px;
-			border: 1px solid #e0e0e0;
-			max-width: 420px;
-			width: 85%;
-			text-align: center;
-			box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-			background-color: #ffffff;
-			color: #2c3e50;
-			font-family: inherit;
-		}
-
-		/* Gestione dei testi interni */
-		dialog#customAlert p {
-			margin: 0 0 20px 0;
-			line-height: 1.5;
-			font-size: 1.05rem;
-			font-weight: 500;
-			white-space: pre-wrap; /* Mantiene a capo (\n) originali */
-		}
-
-		/* Contenitore dei pulsanti interni */
-		#customAlertButtons {
-			display: flex;
-			gap: 12px;
-			justify-content: center;
-		}
-
-		/* Stile universale per i pulsanti del popup */
-		.popup-btn {
-			padding: 10px 24px;
-			border: none;
-			border-radius: 8px;
-			cursor: pointer;
-			font-weight: bold;
-			font-size: 0.95rem;
-			transition: background 0.2s, transform 0.1s;
-		}
-		.popup-btn:active {
-			transform: scale(0.97);
-		}
-
-		/* Bottone di Conferma Primaria (OK / SI) */
-		.popup-btn-confirm {
-			background-color: #2980b9; /* Il tuo blu esame originario */
-			color: white;
-		}
-		.popup-btn-confirm:hover {
-			background-color: #1f618d;
-		}
-
-		/* Bottone di Annullamento (ANNULLA / NO) */
-		.popup-btn-cancel {
-			background-color: #e0e0e0;
-			color: #333;
-		}
-		.popup-btn-cancel:hover {
-			background-color: #d5d5d5;
-		}
-
-		/* --- EFFETTO SFOCATURA DELLO SFONDO --- */
-		dialog#customAlert::backdrop {
-			background: rgba(0, 0, 0, 0.25);
-			backdrop-filter: blur(8px);
-			-webkit-backdrop-filter: blur(8px); /* Ottimizzazione Safari Mobile */
-		}
-
-		dialog#customAlert[open] {
-			animation: popIn 0.25s ease-out;
-		}
-
-		@keyframes popIn {
-			from {
-				opacity: 0;
-				transform: scale(0.92);
-			}
-			to {
-				opacity: 1;
-				transform: scale(1);
-			}
-		}
-
-		/* ========================================================
-		   ADATTAMENTO PER LA TUA DARK MODE
-		   ======================================================== */
-		body.dark-mode dialog#customAlert {
-			background-color: #1e1e1e !important; /* Il tuo grigio scuro dei box */
-			color: #ffffff !important;
-			border-color: #333333 !important;
-			box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-		}
-
-		body.dark-mode .popup-btn-cancel {
-			background-color: #333;
-			color: #fff;
-		}
-		body.dark-mode .popup-btn-cancel:hover {
-			background-color: #444;
-		}
-
-		body.dark-mode dialog#customAlert::backdrop {
-			background: rgba(0, 0, 0, 0.45); /* Più scuro di notte per far risaltare il popup */
+			header #ceci-header-dots.menu-aperto { display: flex !important; }
+			body.dark-mode #ceci-toggle-menu { background-color: #117a65; }
+			body.dark-mode header #ceci-header-dots { border-top-color: rgba(255, 255, 255, 0.1) !important; }
 		}
 	</style>
 </head>
@@ -1071,9 +726,9 @@
 	<header id="quiz-header" class="hidden">
 		<div class="header-content">
 			<div class="h-left">
-				<button class="btn" style="padding:10px 15px; cursor:pointer; font-weight:bold; border-radius:8px;" onclick="goHome()">🏠 Home</button>
-				<button id="restart-btn" class="btn" style="padding:10px 15px; cursor:pointer; font-weight:bold; border-radius:8px;" onclick="restartQuiz()">🔄 Rinizia</button>
-				<button id="theme-toggle" class="btn" style="padding:10px 15px; cursor:pointer; font-size:1.2em; border-radius:8px;" onclick="toggleDarkMode()">🌓</button>
+				<button class="btn" onclick="goHome()">🏠 Home</button>
+				<button id="restart-btn" class="btn" onclick="restartQuiz()">🔄 Rinizia</button>
+				<button id="theme-toggle" class="btn" style="font-size: 1.2em;" onclick="toggleDarkMode()">🌓</button>
 			</div>
 			
 			<div class="h-center">
@@ -1100,28 +755,28 @@
 		</div>
 	</header>
 	
-	<!-- HOME SCREEN RIPRISTINATA -->
-
+	<!-- HOME SCREEN -->
 	<div id="home-screen">
 		<div class="menu-card">
-			
-			<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-				<h1 style="margin: 0; font-size: 1.8em;">🚜 Quiz Patentino</h1>
-				<div style="display: flex; gap: 8px;">
-					<button id="btn-errori" class="btn" style="padding: 8px 12px; cursor:pointer; font-size:1.1em; border-radius:8px; position:relative;" onclick="startQuiz('errors')" title="Ripassa Errori">
-						🚩 <span id="error-count" style="font-size: 0.6em; position: absolute; top: -5px; right: -5px; background: var(--wrong); color: white; border-radius: 50%; padding: 2px 6px; display: none; font-family: sans-serif;">0</span>
+
+			<div class="home-header">
+				<h1 class="home-title">🚜 Quiz Patentino</h1>
+				<div class="btn-extra">
+					<button id="btn-errori" class="btn btn-icon" style="position:relative;" onclick="startQuiz('errors')" title="Ripassa Errori">
+						🚩 <span id="error-count">0</span>
 					</button>
-					<button class="btn" style="padding: 8px 12px; cursor:pointer; font-size:1.1em; border-radius:8px;" onclick="toggleDarkMode()" title="Giorno/Notte">🌓</button>
+					<button class="btn btn-icon" onclick="toggleDarkMode()" title="Giorno/Notte">🌓</button>
 				</div>
 			</div>
 
-			<h3>Il corretto impiego dei prodotti fitosanitari.<br>Edizione 2016 rev. 01/18<h3>
+			<h3>Il corretto impiego dei prodotti fitosanitari.<br>Edizione 2016 rev. 01/18</h3>
 			
 			<button id="btn-all-questions" class="btn-main" onclick="startQuiz('all')">📖 Tutte le domande</button>
-			<div style="display: flex; gap: 8px; margin: 12px 0;">
-				<button class="btn-main" style="background: #e67e22; flex: 1; padding: 10px; font-size: 0.8em; margin-bottom:0;" onclick="startQuiz('mod1')">MOD 1</button>
-				<button class="btn-main" style="background: #27ae60; flex: 1; padding: 10px; font-size: 0.8em; margin-bottom:0;" onclick="startQuiz('mod2')">MOD 2</button>
-				<button class="btn-main" style="background: #2980b9; flex: 1; padding: 10px; font-size: 0.8em; margin-bottom:0;" onclick="startQuiz('mod3')">MOD 3</button>
+			
+			<div class="modules-row">
+				<button class="btn-main btn-mod btn-mod-1" onclick="startQuiz('mod1')">MOD 1</button>
+				<button class="btn-main btn-mod btn-mod-2" onclick="startQuiz('mod2')">MOD 2</button>
+				<button class="btn-main btn-mod btn-mod-3" onclick="startQuiz('mod3')">MOD 3</button>
 			</div>
 			
 			<div class="rand-box">
@@ -1137,17 +792,16 @@
 
 			<!-- Box a comparsa con la griglia dei 194 pallini -->
 			<div id="ceci-selection-box" class="hidden">
-				<div style="font-weight: bold; margin-bottom: 8px; color: #16a085; font-size: 0.9em;">
+				<div class="ceci-selection-title">
 					Seleziona da 5 a 40 domande cliccando sui pallini:
 				</div>
-				<!-- Qui JavaScript genererà i pallini da 1 a TOTAL_DOMANDE -->
 				<div id="ceci-grid-container" class="ceci-grid"></div>
 				
-				<div style="display: flex; justify-content: space-between; align-items: center;">
-					<span style="font-size: 0.85em; font-weight: bold; color: #555;">
-						Selezionate: <strong id="ceci-count-label" style="color:#16a085;">0</strong>
+				<div class="ceci-footer">
+					<span class="ceci-label">
+						Selezionate: <strong id="ceci-count-label" class="ceci-count-val">0</strong>
 					</span>
-					<button class="btn-rand" style="background:#16a085; margin:0; padding: 10px 20px;" onclick="avviaModalitaCeci()">🚀 Avvia Domande</button>
+					<button class="btn-rand btn-ceci-start" onclick="avviaModalitaCeci()">🚀 Avvia Domande</button>
 				</div>
 			</div>
 		</div>
@@ -1181,22 +835,17 @@
 			<!-- 📥 Scarica questo quiz -->
 		<!-- </a></p> -->
 	</footer>
-	<dialog id="customAlert" style="z-index: 2500;">
+
+	<dialog id="customAlert">
 		<p id="customAlertText"></p>
 		<div id="customAlertButtons"></div>
 	</dialog>
-	<div id="scroll-index" class="hidden-index">
-		<div class="index-dot" onclick="jumpTo(1)" title="Intro">1</div>
-		<div class="index-dot" onclick="jumpTo(25)" title="Unità 1">25</div>
-		<div class="index-dot" onclick="jumpTo(50)" title="Unità 2">50</div>
-		<div class="index-dot" onclick="jumpTo(100)" title="Metà">100</div>
-		<div class="index-dot" onclick="jumpTo(150)" title="Quasi fine">150</div>
-		<div class="index-dot" onclick="jumpTo(194)" title="Fine">194</div>
-	</div>
+
+	<div id="scroll-index" class="hidden-index"></div>
 
 	<script>
-		const savedTheme = localStorage.getItem('theme'); // Salvo il valore
-		if (savedTheme === 'dark') { // Lo controllo
+		const savedTheme = localStorage.getItem('theme');
+		if (savedTheme === 'dark') {
 			document.body.classList.add('dark-mode');
 		}
 
@@ -1406,11 +1055,9 @@
 			{ q: "194. Cos’è la valutazione di incidenza o VINCA?", a: ["è un procedimento facoltativo per i Piani, i progetti o anche i singoli interventi che possono avere incidenza significativa sulla conservazione degli habitat e delle specie animali e vegetali presenti in un Sito della Rete Natura 2000", "è un procedimento obbligatorio per tutti gli interventi che si realizzano in un Sito della Rete Natura 2000", "è un procedimento obbligatorio per i Piani, i progetti o anche i singoli interventi che possono avere incidenza significativa sulla conservazione degli habitat e delle specie animali e vegetali presenti in un Sito della Rete Natura 2000"], correct: 2 }
 		];
 		
-		// Aggiunge l'indice originale a ogni domanda per non perderlo col shuffle
 		allQuestions.forEach((q, i) => q.originalIndex = i);
 
 		const TOTAL_DOMANDE = allQuestions.length;
-		
 		document.getElementById('btn-all-questions').innerText = `📖 Tutte le domande (${TOTAL_DOMANDE})`;
 		document.getElementById('rand-num').setAttribute('max', TOTAL_DOMANDE);
 
@@ -1446,15 +1093,11 @@
 			}
 		];
 
-		// Placeholder per capitoli (da personalizzare)
 		function getInfoStudio(index) {
 			const n = index + 1;
-
-			// --- INTRO ---
 			if (n <= 5) return { modulo: "INTRO", titoloModulo: "Il Patentino", modCol: "#bdc3c7", unita: "INFO", titoloUnita: "A cosa serve", uniCol: "#ecf0f1", da: 1, a: 5 };
 
 			let config;
-			// --- MAPPA INTERVALLI (Intervallo fisso) ---
 			if (n >= 6 && n <= 16)    config = { m:0, u:0, p1:2, p2:8 };
 			if (n >= 17 && n <= 21)   config = { m:0, u:0, p1:9, p2:10 };
 			if (n >= 22 && n <= 25)   config = { m:0, u:0, p1:11,p2:13 };
@@ -1463,13 +1106,10 @@
 			if (n >= 38 && n <= 41)   config = { m:0, u:0, p1:26,p2:28 };
 			if (n >= 42 && n <= 43)   config = { m:0, u:0, p1:29,p2:33 };
 			if (n >= 44 && n <= 50)   config = { m:0, u:0, p1:33,p2:39 };
-
 			if (n >= 51 && n <= 59)   config = { m:0, u:1, p1:2, p2:14 };
-
 			if (n >= 60 && n <= 74)   config = { m:1, u:0, p1:2, p2:31 };
 			if (n >= 75 && n <= 84)   config = { m:1, u:0, p1:31,p2:41 };
 			if (n >= 85 && n <= 94)   config = { m:1, u:0, p1:41,p2:44 };
-
 			if (n >= 95 && n <= 96)   config = { m:1, u:1, p1:2, p2:4 };
 			if (n >= 97 && n <= 101)  config = { m:1, u:1, p1:4, p2:7 };
 			if (n >= 102 && n <= 105) config = { m:1, u:1, p1:8, p2:14 };
@@ -1477,11 +1117,9 @@
 			if (n >= 117 && n <= 121) config = { m:1, u:1, p1:25,p2:32 };
 			if (n >= 122 && n <= 124) config = { m:1, u:1, p1:33,p2:37 };
 			if (n >= 125 && n <= 127) config = { m:1, u:1, p1:38,p2:41 };
-
 			if (n >= 128 && n <= 136) config = { m:1, u:2, p1:2, p2:5 };
 			if (n >= 137 && n <= 155) config = { m:1, u:2, p1:7, p2:24 };
 			if (n >= 156 && n <= 174) config = { m:1, u:2, p1:27,p2:45 };
-
 			if (n >= 175 && n <= 185) config = { m:2, u:0, p1:2, p2:10 };
 			if (n >= 186 && n <= 189) config = { m:2, u:1, p1:2, p2:11 };
 			if (n >= 190 && n <= 194) config = { m:2, u:2, p1:2, p2:10 };
@@ -1492,14 +1130,8 @@
 			const uni = mod.unita[config.u];
 
 			return {
-				modulo: "MODULO " + mod.id,
-				titoloModulo: mod.titolo,
-				modCol: mod.colore,
-				unita: uni.nome,
-				titoloUnita: uni.titolo,
-				uniCol: uni.colore,
-				da: config.p1,
-				a: config.p2
+				modulo: "MODULO " + mod.id, titoloModulo: mod.titolo, modCol: mod.colore,
+				unita: uni.nome, titoloUnita: uni.titolo, uniCol: uni.colore, da: config.p1, a: config.p2
 			};
 		}
 
@@ -1512,10 +1144,10 @@
 		let ceciSelectedIndices = [];
 
 		function mostraSuggerimento(originalIdx, currentIdx) {
-			// Usiamo currentIdx per trovare il box nel DOM
 			const box = document.getElementById(`q-box-${currentIdx}`);
-			const esistente = box.querySelector('.hint-text');
+			if (!box) return; // FIX: Evita crash se box non esiste
 			
+			const esistente = box.querySelector('.hint-text');
 			if (esistente) { 
 				esistente.remove(); 
 				return; 
@@ -1526,21 +1158,19 @@
 
 			const hintDiv = document.createElement('div');
 			hintDiv.className = 'hint-text';
-			
 			hintDiv.innerHTML = `
 				<div class="row-modulo" style="background: ${info.modCol};">
-					<div class="label-box" style="text-transform: uppercase; font-weight: bold;">${info.modulo}</div> 
-					<div class="desc-box" style="font-weight: bold;">${info.titoloModulo || ''}</div>
+					<div class="label-box">${info.modulo}</div> 
+					<div class="desc-box">${info.titoloModulo || ''}</div>
 				</div>
 				<div class="row-unita" style="background: ${info.uniCol};">
-					<div class="label-box" style="text-transform: uppercase; font-weight: bold;">${info.unita}</div> 
-					<div class="desc-box" style="font-weight: bold;">${info.titoloUnita || ''}</div>
+					<div class="label-box">${info.unita}</div> 
+					<div class="desc-box">${info.titoloUnita || ''}</div>
 				</div>
 				<div class="info-pagine-box">
 					📖 Da pagina <strong>${info.da}</strong> a pagina <strong>${info.a}</strong> del manuale
 				</div>
 			`;
-			
 			box.appendChild(hintDiv);
 		}
 
@@ -1548,7 +1178,6 @@
 			const dialog = document.getElementById('customAlert');
 			const textEl = document.getElementById('customAlertText');
 			const buttonsContainer = document.getElementById('customAlertButtons');
-
 			if (!dialog || !textEl || !buttonsContainer) return;
 
 			textEl.innerHTML = testo.replace(/\n/g, '<br>');
@@ -1559,20 +1188,18 @@
 			btnOk.innerText = 'OK';
 			btnOk.onclick = function() {
 				dialog.close();
-				document.body.style.overflow = ''
+				document.body.style.overflow = '';
 				if (callback) callback();
 			};
-
 			buttonsContainer.appendChild(btnOk);
 			document.body.style.overflow = 'hidden';
-			dialog.showModal(); // Blocca lo schermo e sfuoca
+			dialog.showModal();
 		}
 
 		function mostraConfirm(testo, callbackSi, callbackNo = null) {
 			const dialog = document.getElementById('customAlert');
 			const textEl = document.getElementById('customAlertText');
 			const buttonsContainer = document.getElementById('customAlertButtons');
-
 			if (!dialog || !textEl || !buttonsContainer) return;
 
 			textEl.innerHTML = testo.replace(/\n/g, '<br>');
@@ -1603,7 +1230,6 @@
 		}
 
 		function startQuiz(mode) {
-			// 1. CONTROLLO PREVENTIVO (Solo per modalità errori)
 			if (mode === 'errors') {
 				const ids = JSON.parse(localStorage.getItem('quiz_errori') || "[]");
 				if (ids.length === 0) {
@@ -1612,7 +1238,6 @@
 				}
 			}
 
-			updateScrollIndex(mode); // Nasconde/mostra i pallini in base alla modalità
 			if(timerInterval) clearInterval(timerInterval);
 			currentMode = mode;
 			answersGiven = {};
@@ -1628,7 +1253,6 @@
 			document.getElementById('quiz-container').innerHTML = '';
 			document.getElementById('restart-btn').classList.remove('glow');
 			
-			// Reset Badge
 			document.getElementById('badge-e').classList.remove('hidden');
 			document.getElementById('badge-s').classList.remove('hidden');
 			document.getElementById('timer-box').classList.add('hidden');
@@ -1636,6 +1260,7 @@
 			document.getElementById('submit-exam').classList.add('hidden');
 			document.getElementById('ceci-header-dots').classList.add('hidden');
 			document.getElementById('ceci-row-container').classList.add('hidden');
+			
 			const rb = document.getElementById('restart-btn');
 			if (rb) {
 				rb.classList.remove('hidden');
@@ -1647,62 +1272,47 @@
 			if (mode === 'all') {
 				activeQuestions = [...allQuestions];
 				document.getElementById('mode-title').innerText = "Tutte le domande";
-			} 
-			else if (mode === 'mod1') {
+			} else if (mode === 'mod1') {
 				activeQuestions = allQuestions.filter(q => {
 					const info = getInfoStudio(q.originalIndex);
 					return info && info.modulo === "MODULO 1";
 				});
 				document.getElementById('mode-title').innerText = "Modulo 1";
-			}
-			else if (mode === 'mod2') {
+			} else if (mode === 'mod2') {
 				activeQuestions = allQuestions.filter(q => {
 					const info = getInfoStudio(q.originalIndex);
 					return info && info.modulo === "MODULO 2";
 				});
 				document.getElementById('mode-title').innerText = "Modulo 2";
-			}
-			else if (mode === 'mod3') {
+			} else if (mode === 'mod3') {
 				activeQuestions = allQuestions.filter(q => {
 					const info = getInfoStudio(q.originalIndex);
 					return info && info.modulo === "MODULO 3";
 				});
 				document.getElementById('mode-title').innerText = "Modulo 3";
-			}
-			else if (mode === 'errors') {
+			} else if (mode === 'errors') {
 				const ids = JSON.parse(localStorage.getItem('quiz_errori') || "[]");
 				activeQuestions = allQuestions.filter(q => ids.includes(q.originalIndex));
 				document.getElementById('mode-title').innerText = "Errori Frequenti";
-				
-				// Personalizziamo il tasto reset
 				const rb = document.getElementById('restart-btn');
 				rb.innerHTML = "🗑️ Reset";
 				rb.onclick = resetErrori;
-			}
-			else if (mode === 'ceci') {
-				// 1. Prima estraiamo le domande
+			} else if (mode === 'ceci') {
 				activeQuestions = allQuestions.filter(q => ceciSelectedIndices.includes(q.originalIndex));
 				document.getElementById('mode-title').innerText = "🔬 Modalità Ceci";
-				
-				// 2. Poi configuriamo l'interfaccia
 				document.getElementById('badge-e').classList.add('hidden');
 				document.getElementById('badge-s').classList.add('hidden');
 				document.getElementById('timer-box').classList.add('hidden');
 				document.getElementById('prog-cont').classList.add('hidden');
-				
 				document.getElementById('submit-exam').classList.remove('hidden');
 				document.getElementById('restart-btn').classList.add('hidden');
-				document.getElementById('ceci-row-container').classList.remove('hidden'); // Mostra la riga
-				
-				// 3. INFINE lanciamo il generatore dei pallini (Se viene messo prima, non trova le domande!)
+				document.getElementById('ceci-row-container').classList.remove('hidden');
 				renderCeciHeaderDots();
-			}
-			else if (mode === 'rand') {
+			} else if (mode === 'rand') {
 				const n = parseInt(document.getElementById('rand-num').value) || 20;
 				activeQuestions = shuffle([...allQuestions]).slice(0, n);
 				document.getElementById('mode-title').innerText = "Quiz Casuale";
-			} 
-			else if (mode === 'exam') {
+			} else if (mode === 'exam') {
 				activeQuestions = shuffle([...allQuestions]).slice(0, DOMANDE_ESAME);
 				document.getElementById('mode-title').innerText = "Esame";
 				document.getElementById('badge-e').classList.add('hidden');
@@ -1713,10 +1323,13 @@
 				initTimer();
 			}
 
+			updateScrollIndex(mode);
+
 			renderQuestions();
 			updateStats();
 			window.scrollTo(0,0);
 		}
+
 		function renderQuestions() {
 			const container = document.getElementById('quiz-container');
 			activeQuestions.forEach((q, idx) => {
@@ -1745,15 +1358,10 @@
 			const buttons = document.querySelectorAll(`#q-box-${qIdx} .option-btn`);
 			
 			if (currentMode === 'exam' || currentMode === 'ceci') {
-				// Rimuove la selezione precedente su questa domanda
 				buttons.forEach(b => b.classList.remove('selected-exam'));
-				// Evidenzia la nuova scelta col colore blu esame
 				buttons[optIdx].classList.add('selected-exam');
 				answersGiven[qIdx] = optIdx;
-				if (currentMode === 'ceci') {
-					updateCeciHeaderDotState(qIdx, optIdx);
-				}
-				
+				if (currentMode === 'ceci') updateCeciHeaderDotState(qIdx, optIdx);
 				updateStats();
 			} else {
 				answersGiven[qIdx] = optIdx;
@@ -1771,18 +1379,61 @@
 		function updateStats() {
 			const total = activeQuestions.length;
 			const answered = Object.keys(answersGiven).length;
+			
 			if(currentMode !== 'exam' || esameFinito) {
 				let e = 0, s = 0;
-				Object.keys(answersGiven).forEach(k => { if(answersGiven[k] === activeQuestions[k].correct) e++; else s++; });
+				Object.keys(answersGiven).forEach(k => { 
+					if(answersGiven[k] === activeQuestions[k].correct) e++; 
+					else s++; 
+				});
+				
 				document.getElementById('badge-e').innerText = `Esatte: ${e}`;
 				document.getElementById('badge-s').innerText = `Sbagliate: ${s}`;
+				
 				if(currentMode !== 'exam') {
 					const bar = document.getElementById('progress-bar');
+					
+					// 1. LUNGHEZZA: Si riempie in base alle risposte date
 					bar.style.width = (answered/total*100) + "%";
+					
+					// 2. COLORE: Cambia in base alla MEDIA delle risposte corrette
 					if (answered > 0) {
-						const p = (e / answered) * 100;
-						bar.style.background = p < 60 ? "var(--wrong)" : p < 80 ? "#f1c40f" : "var(--correct)";
-					}
+						const p = (e / answered) * 100; // Percentuale media attuale
+						
+						// --- DEBUG CONSOLE ---
+						// console.log("Media attuale: " + p.toFixed(2) + "%");
+						// ---------------------
+
+						let color;
+
+						if (p >= 85) {
+							// 85%+ (17/20): VERDE PIENO (Obiettivo raggiunto)
+							color = "linear-gradient(90deg, #2ecc71, #27ae60)"; 
+						} else if (p >= 80) {
+							// 80-84%: VERDE-GIALLO
+							color = "linear-gradient(90deg, #dfff82, #2ecc71)"; 
+						} else if (p >= 75) {
+							// 75-79%: GIALLO SCURO/Oro
+							color = "linear-gradient(90deg, #f1c40f, #dfff82)"; 
+						} else if (p >= 70) {
+							// 70-74%: GIALLO CHIARO
+							color = "linear-gradient(90deg, #f39c12, #f1c40f)"; 
+						} else if (p >= 65) {
+							// 65-69%: ARANCIONE CHIARO
+							color = "linear-gradient(90deg, #e67e22, #f39c12)"; 
+						} else if (p >= 60) {
+							// 60-64%: ARANCIONE SCURO
+							color = "linear-gradient(90deg, #d35400, #e67e22)"; 
+						} else if (p >= 50) {
+							// 50-59%: ROSSO-ARANCIO
+							color = "linear-gradient(90deg, #e74c3c, #d35400)"; 
+						} else {
+							// <50%: ROSSO PURO
+							color = "linear-gradient(90deg, #c0392b, #e74c3c)"; 
+						}
+
+						bar.style.background = color;
+					} 
 				}
 			}
 			document.getElementById('badge-r').innerText = `Risposte: ${answered}/${total}`;
@@ -1792,44 +1443,36 @@
 			const total = activeQuestions.length;
 			const answeredCount = Object.keys(answersGiven).length;
 
-			// 1. Controllo domande mancanti
 			if (answeredCount < total) {
 				let m = []; 
-				// Rimuoviamo eventuali lampeggiamenti precedenti
 				document.querySelectorAll('.question-box').forEach(b => b.classList.remove('missing-answer'));
 
 				for(let i=0; i<total; i++) {
 					if(answersGiven[i] === undefined) {
 						m.push(i+1);
-						// Aggiungiamo l'effetto visivo al box mancante
 						document.getElementById(`q-box-${i}`).classList.add('missing-answer');
 					}
 				}
 				
 				mostraAlert("Mancano le risposte: " + m.join(", "), function() {
-					// --- TUTTO QUESTO PARTE SOLO DOPO AVER PREMUTO OK ---
 					const primaMancanteIdx = m[0] - 1; 
 					const target = document.getElementById(`q-box-${primaMancanteIdx}`);
 					if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-					// IL TIMER PARTE ADESSO: Spegne il lampeggiamento dopo 4 secondi dallo scroll
 					setTimeout(function() {
 						document.querySelectorAll('.question-box').forEach(b => {
 							b.classList.remove('missing-answer');
 						});
-					}, 5000); // 5 secondi
+					}, 5000);
 				});
 				return;
 			}
 
 			mostraConfirm("Sei sicuro? Se consegni non potrai più cambiare le risposte.", function() {
-				// Questo codice parte SOLO se l'utente clicca su "Conferma"
 				clearInterval(timerInterval);
 				esameFinito = true;
 				document.getElementById('submit-exam').classList.add('hidden');
-				if (currentMode === 'exam') {
-					document.getElementById('restart-btn').classList.add('glow');
-				}
+				if (currentMode === 'exam') document.getElementById('restart-btn').classList.add('glow');
 				
 				let c = 0;
 				activeQuestions.forEach((q, idx) => {
@@ -1882,9 +1525,7 @@
 				document.getElementById('timer-box').innerText = `${m}:${s < 10 ? '0'+s : s}`;
 				if(timeRemaining <= 0) { 
 					clearInterval(timerInterval); 
-					mostraAlert("Tempo scaduto!", function() {
-						consegnaEsame(); 
-					});
+					mostraAlert("Tempo scaduto!", function() { consegnaEsame(); });
 				}
 			}, 1000);
 		}
@@ -1892,20 +1533,14 @@
 		function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 		
 		function goHome(force = false) {
-			// Funzione interna per isolare la pulizia variabili ed eseguire il rientro effettivo alla home
 			function eseguiRientro() {
 				if (timerInterval) clearInterval(timerInterval);
 				ceciSelectedIndices = []; 
-				
 				const ceciBox = document.getElementById('ceci-selection-box');
 				if (ceciBox) ceciBox.classList.add('hidden'); 
-				
 				const labelCount = document.getElementById('ceci-count-label');
 				if (labelCount) labelCount.innerText = "0"; 
-				
-				document.querySelectorAll('.ceci-select-dot').forEach(dot => {
-					dot.classList.remove('selected');
-				});
+				document.querySelectorAll('.ceci-select-dot').forEach(dot => dot.classList.remove('selected'));
 
 				answersGiven = {};
 				activeQuestions = [];
@@ -1933,66 +1568,77 @@
 				window.scrollTo(0,0);
 			}
 
-			// Sostituito confirm nativo con la modale sfuocata
 			if (!force && !esameFinito && currentMode !== 'errors' && (Object.keys(answersGiven).length > 0 || currentMode === 'ceci')) {
 				mostraConfirm("Il quiz è in corso. Vuoi tornare alla home e perdere i progressi?", function() {
-					eseguiRientro(); // Parte solo se l'utente preme "Conferma"
+					eseguiRientro();
 				});
 			} else {
-				eseguiRientro(); // Esce direttamente senza chiedere se forzato o se l'esame è concluso
+				eseguiRientro();
 			}
 		}
 
 		function restartQuiz() { 
-			// Sostituito confirm nativo con la modale sfuocata
 			if (Object.keys(answersGiven).length > 0 && !esameFinito && currentMode !== 'errors') {
 				mostraConfirm("Vuoi riniziare il quiz attuale?", function() {
-					startQuiz(currentMode); // Parte solo se l'utente preme "Conferma"
+					startQuiz(currentMode);
 				});
 			} else {
 				startQuiz(currentMode);
 			}
 		}
 
-		// Funzione per saltare alla domanda specifica
 		function jumpTo(n) {
 			const target = document.getElementById(`q-box-${n-1}`);
 			if (target) {
-				// Calcoliamo l'offset per non finire sotto l'header (160px)
 				const headerOffset = 160;
 				const elementPosition = target.getBoundingClientRect().top;
 				const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-				window.scrollTo({
-					top: offsetPosition,
-					behavior: 'smooth'
-				});
+				window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
 			}
 		}
 
-		// Funzione per mostrare/nascondere la barra
 		function updateScrollIndex(mode) {
 			const bar = document.getElementById('scroll-index');
-			if (mode === 'all') {
+			
+			// Lista delle modalità in cui vogliamo vedere l'indice
+			const modalitaConIndice = ['all', 'mod1', 'mod2', 'mod3'];
+
+			if (modalitaConIndice.includes(mode)) {
 				bar.classList.remove('hidden-index');
+				bar.innerHTML = ''; 
+				
+				if (!activeQuestions || activeQuestions.length === 0) return;
+
+				const total = activeQuestions.length;
+				const dotsCount = 6; 
+				
+				for (let i = 0; i < dotsCount; i++) {
+					let percentage = i / (dotsCount - 1);
+					let questionNum = Math.round(percentage * (total - 1)) + 1;
+
+					const dot = document.createElement('div');
+					dot.className = 'index-dot';
+					dot.innerText = questionNum;
+					dot.title = "Vai alla domanda " + questionNum;
+					
+					dot.onclick = function() {
+						jumpTo(questionNum);
+					};
+					
+					bar.appendChild(dot);
+				}
 			} else {
+				// Per Esame, Ceci, Errori, Rand: nascondi tutto
 				bar.classList.add('hidden-index');
 			}
 		}
 
 		document.getElementById('rand-num').addEventListener('wheel', function(e) {
-			// Se l'input ha il focus (ci hai cliccato dentro)
 			if (document.activeElement === this) {
-				// Blocca lo scroll della pagina esterna
 				e.preventDefault();
-				
-				// Cambia il numero manualmente in base alla rotellina
 				let val = parseInt(this.value) || 0;
-				if (e.deltaY < 0) {
-					this.value = val + 1; // Ruota su -> aumenta
-				} else {
-					if (val > 1) this.value = val - 1; // Ruota giù -> diminuisci
-				}
+				if (e.deltaY < 0) this.value = val + 1;
+				else if (val > 1) this.value = val - 1;
 			}
 		}, { passive: false });
 
@@ -2004,26 +1650,22 @@
 		function gestisciErrore(qIdx, corretto) {
 			let errori = JSON.parse(localStorage.getItem('quiz_errori') || "[]");
 			const originalIdx = activeQuestions[qIdx].originalIndex;
-
 			if (!corretto) {
 				if (!errori.includes(originalIdx)) errori.push(originalIdx);
 			} else {
 				errori = errori.filter(id => id !== originalIdx);
 			}
-			
 			localStorage.setItem('quiz_errori', JSON.stringify(errori));
 			aggiornaContatoreErrori();
 		}
 
 		function gestisciErroreEsame(originalIdx, corretto) {
 			let errori = JSON.parse(localStorage.getItem('quiz_errori') || "[]");
-
 			if (!corretto) {
 				if (!errori.includes(originalIdx)) errori.push(originalIdx);
 			} else {
 				errori = errori.filter(id => id !== originalIdx);
 			}
-			
 			localStorage.setItem('quiz_errori', JSON.stringify(errori));
 			aggiornaContatoreErrori(); 
 		}
@@ -2033,16 +1675,14 @@
 			const badge = document.getElementById('error-count');
 			if (errori.length > 0) {
 				badge.innerText = errori.length;
-				badge.style.display = 'block';
+				badge.classList.add('has-errors'); // Usa classe invece di style.display
 			} else {
-				badge.style.display = 'none';
+				badge.classList.remove('has-errors');
 			}
 		}
 
 		function resetErrori() {
-			// Sostituito confirm nativo con la modale sfuocata
 			mostraConfirm("Vuoi svuotare il salvadanaio degli errori?", function() {
-				// Parte solo se l'utente preme "Conferma"
 				localStorage.setItem('quiz_errori', "[]");
 				aggiornaContatoreErrori();
 				window.scrollTo(0,0);
@@ -2051,16 +1691,12 @@
 		}
 
 		// --- LOGICA MODALITÀ CECI ---
-
-		// 1. Mostra o nasconde il box di selezione nella Home e genera la griglia se vuota
 		function toggleCeciSelectionBox() {
 			const box = document.getElementById('ceci-selection-box');
-			const isOpening = box.classList.contains('hidden'); // Controlla se lo stiamo aprendo
-			
+			const isOpening = box.classList.contains('hidden');
 			box.classList.toggle('hidden');
 			
 			const container = document.getElementById('ceci-grid-container');
-			// Genera la griglia dei pallini solo la prima volta che viene aperta
 			if (container.children.length === 0) {
 				for (let i = 0; i < TOTAL_DOMANDE; i++) {
 					const dot = document.createElement('div');
@@ -2070,22 +1706,18 @@
 					container.appendChild(dot);
 				}
 			}
-
 			if (isOpening) {
 				const grid = document.querySelector('.ceci-grid');
 				if (grid) grid.scrollTop = 0;
 			}
 		}
 
-		// 2. Gestisce il clic sul pallino nella Home (selezione/deselezione)
 		function toggleSelectCeciQuestion(index, element) {
 			const pos = ceciSelectedIndices.indexOf(index);
 			if (pos > -1) {
-				// Se era già selezionato, lo rimuove
 				ceciSelectedIndices.splice(pos, 1);
 				element.classList.remove('selected');
 			} else {
-				// Se non era selezionato, controlla il limite massimo di 40
 				if (ceciSelectedIndices.length >= 40) {
 					mostraAlert("Puoi selezionare al massimo 40 domande per la Modalità Cecilia!");
 					return;
@@ -2093,28 +1725,22 @@
 				ceciSelectedIndices.push(index);
 				element.classList.add('selected');
 			}
-			// Aggiorna il contatore visivo nella Home
 			document.getElementById('ceci-count-label').innerText = ceciSelectedIndices.length;
 		}
 
-		// 3. Controlla i limiti (5-40) e lancia il quiz
 		function avviaModalitaCeci() {
 			const count = ceciSelectedIndices.length;
 			if (count < 5 || count > 40) {
 				mostraAlert("Seleziona da un minimo di 5 a un massimo di 40 domande per la Modalità Cecilia! 🧮");
 				return;
 			}
-			// Ordina gli indici in modo crescente per avere le domande in ordine numerico ordinato
 			ceciSelectedIndices.sort((a, b) => a - b);
-			
-			// Avvia il quiz passando la modalità speciale 'ceci'
 			startQuiz('ceci');
 		}
 
-		// 4. Genera i pallini dinamici all'interno dell'header durante il quiz
 		function renderCeciHeaderDots() {
 			const container = document.getElementById('ceci-header-dots');
-			if (!container) return; // Sicurezza per evitare blocchi
+			if (!container) return;
 			container.innerHTML = '';
 			
 			activeQuestions.forEach((q, idx) => {
@@ -2122,21 +1748,16 @@
 				hDot.className = 'ceci-header-dot';
 				hDot.id = `ceci-hdot-${idx}`;
 				
-				// Struttura iniziale richiesta: Numero + Simbolo vuoto
-				hDot.innerHTML = `<span style="font-size: 0.95em; display: block;">${q.originalIndex + 1}</span><span style="font-size: 0.75em; font-weight: normal; color: #aaa; display: block;">Ø</span>`
+				// FIX: Rimosso color: #aaa dallo span per permettere al JS di gestire i colori
+				hDot.innerHTML = `<span style="font-size: 0.95em; display: block;">${q.originalIndex + 1}</span><span style="font-size: 0.75em; font-weight: normal; display: block;">Ø</span>`
 				
 				hDot.onclick = () => {
 					const target = document.getElementById(`q-box-${idx}`);
 					const header = document.getElementById('quiz-header');
 					if (target && header) {
-						// Il browser legge l'altezza dell'header e sa esattamente dove fermarsi nello scroll
 						target.style.scrollMarginTop = (header.offsetHeight + 15) + "px";
-						target.scrollIntoView({ 
-							behavior: 'smooth', 
-							block: 'start' 
-						});
-
-						if (window.innerWidth <= 600) { // Si attiva solo se lo schermo è da smartphone
+						target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+						if (window.innerWidth <= 600) {
 							const dotsContainer = document.getElementById('ceci-header-dots');
 							const toggleBtn = document.getElementById('ceci-toggle-menu');
 							if (dotsContainer && toggleBtn) {
@@ -2146,21 +1767,18 @@
 						}
 					}
 				};
-
 				container.appendChild(hDot);
 			});
 		}
 
-		// 5. Aggiorna l'aspetto del pallino dell'header quando l'utente risponde
 		function updateCeciHeaderDotState(qIdx, optIdx) {
 			if (currentMode !== 'ceci') return;
 			const hDot = document.getElementById(`ceci-hdot-${qIdx}`);
 			if (!hDot || esameFinito) return;
 			
-			const letter = String.fromCharCode(65 + optIdx); // Trasforma 0 in A, 1 in B, 2 in C
+			const letter = String.fromCharCode(65 + optIdx);
 			const origNum = activeQuestions[qIdx].originalIndex + 1;
 			
-			// Forziamo una struttura flessibile interna al pallino per tenere il testo centrato ed evitare deformazioni
 			hDot.style.display = 'inline-flex';
 			hDot.style.flexDirection = 'column';
 			hDot.style.alignItems = 'center';
@@ -2176,25 +1794,19 @@
 			hDot.style.setProperty('color', 'white', 'important');
 		}
 
-		// Funzione per aprire/chiudere la griglia Ceci su smartphone
 		function toggleCeciMobileMenu() {
 			const dotsContainer = document.getElementById('ceci-header-dots');
 			const toggleBtn = document.getElementById('ceci-toggle-menu');
 			
 			if (!dotsContainer || !toggleBtn) return;
 
-			// Attiva o disattiva la classe CSS che mostra i pallini
 			const isOpen = dotsContainer.classList.toggle('menu-aperto');
-			
-			// Cambia il testo del pulsante in base allo stato
-			if (isOpen) {
-				toggleBtn.innerText = "✖️ Nascondi Mappa Domande";
-			} else {
-				toggleBtn.innerText = "🧮 Mostra Mappa Domande";
-			}
+			toggleBtn.innerText = isOpen 
+				? "✖️ Nascondi Mappa Domande"
+				: "🧮 Mostra Mappa Domande";
 		}
-		
-		console.log("%c🚜 Quiz Patentino %cby LuxR & Gemini AI", 
+
+		console.log("%c🚜 Quiz Patentino %cby LuxR & Gemini AI & Gwen AI", 
 			"color: #e67e22; font-weight: bold; font-size: 16px;", 
 			"color: #2980b9; font-weight: bold;");
 		console.log("Materiale didattico tratto dal sito della Regione Emilia-Romagna");
