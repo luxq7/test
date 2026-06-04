@@ -51,6 +51,7 @@
 		}
 
 		.hidden { display: none !important; }
+		img { max-width: 100%; height: auto; display: block; }
 
 		/* ============================================================================
 		   2. STRUTTURA BASE - BODY
@@ -275,25 +276,87 @@
 		.btn-mod-3 { background: linear-gradient(to bottom, #2980b9, #1f618d); color: #ffffff; border: none; }
 		.btn-mod:active { transform: translateY(0) scale(0.98); filter: brightness(0.9); }
 
+
+		/* Active effects generali bottoni home */
+		.btn-main:active, .btn-rand:active, .btn-exam:active, .btn-ceci:active {
+			transform: translateY(0) scale(0.98);
+			filter: brightness(0.9);
+		}
+
+		/* Select del Random Quiz */
+		#random-quiz-select { 
+			color: #2c3e50; 
+			background-color: #fff; 
+			border: 1px solid rgba(0,0,0,0.2); 
+		}
+
 		.rand-box {
 			background: #f1f4f9;
 			padding: 15px 20px;
 			border-radius: 15px;
 			margin-bottom: 15px;
-			border: 1px solid #dce4f0;
+			border: 1px solid rgba(0,0,0,0.2);
 		}
-		.rand-box p { margin: 0 0 10px 0; font-weight: bold; color: #444; }
-		.rand-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
-		
+		.rand-box p { 
+			margin: 0 0 10px 0; 
+			font-weight: bold; 
+			color: #444; 
+		}
+
+		/* CONTENITORE CONTROLLI: Flex + Relative per le frecce */
+		.rand-controls { 
+			display: flex; 
+			justify-content: center; 
+			align-items: center; 
+			gap: 10px; 
+			position: relative; /* FONDAMENTALE PER LE FRECCE */
+		}
+
+		/* INPUT NUMERICO */
 		#rand-num {
 			width: 65px;
-			padding: 10px;
+			padding: 10px !important; /* Spazio a destra per le frecce */
 			text-align: center;
 			border-radius: 10px;
-			border: 2px solid #ccc;
+			border: 1px solid rgba(0,0,0,0.2);
 			font-size: 1.1em;
 			font-weight: bold;
+			background-color: #fff;
+			color: #2c3e50;
+			-moz-appearance: textfield;
 		}
+
+		/* Nasconde freccette native Chrome/Edge */
+		#rand-num::-webkit-outer-spin-button,
+		#rand-num::-webkit-inner-spin-button {
+			-webkit-appearance: none;
+			margin: 0;
+		}
+
+		/* BOTTONI FRECCE CUSTOM (Base Mobile: Nascosti) */
+
+		.input-wrapper { position: relative; display: inline-block; }
+		.spin-btn {
+			display: none; /* Default mobile */
+			position: absolute;
+			right: 4px;
+			width: 18px;
+			height: 18px;
+			padding: 0;
+			background: none;
+			border: none;
+			cursor: pointer;
+			align-items: center;
+			justify-content: center;
+			opacity: 0.7;
+			transition: opacity 0.2s;
+			z-index: 2;
+		}
+		.spin-up { top: 4px; }
+		.spin-down { bottom: 4px; }
+		.spin-btn svg { fill: #2c3e50; width: 14px; height: 14px; }
+
+		/* BOTTONI GENERA */
 		.btn-rand {
 			padding: 10px 20px;
 			background: linear-gradient(to bottom, #5dade2, #2e86c1);
@@ -303,13 +366,6 @@
 			cursor: pointer;
 			font-weight: bold;
 			transition: background 0.2s, transform 0.1s;
-			border: none; 
-		}
-
-		/* Active effects generali bottoni home */
-		.btn-main:active, .btn-rand:active, .btn-exam:active, .btn-ceci:active {
-			transform: translateY(0) scale(0.98);
-			filter: brightness(0.9);
 		}
 
 		/* Box Selezione Ceci */
@@ -525,15 +581,18 @@
 			border-left: 6px solid rgba(255, 255, 255, 0.20) !important;
 		}
 
-		body.dark-mode .menu-card h1, body.dark-mode .menu-card h3, body.dark-mode .rand-box p { color: #ffffff !important; }
+		body.dark-mode .menu-card h1, body.dark-mode .menu-card h3 { color: #ffffff !important; }
 		body.dark-mode footer hr { border-top: 1px solid #444; }
 		body.dark-mode .badge { box-shadow: 0 2px 5px rgba(0,0,0,0.4) !important; }
-		body.dark-mode .rand-box { background-color: #252525 !important; border-color: #444 !important; }
-		body.dark-mode #rand-num { background-color: #121212 !important; color: #ffffff !important; border-color: #555 !important; }
 		
-		/* Bottoni Dark Mode */
+		/* Bottoni & Input Controls Dark Mode */
+		body.dark-mode #random-quiz-select { color: #fff; background-color: #1e1e1e; border: 1px solid rgba(255,255,255,0.2); accent-color: #fff; filter: invert(1) brightness(1.5); }
+		body.dark-mode .rand-box { background-color: #2a2a2a; border-color: rgba(255,255,255,0.2); }
+		body.dark-mode .rand-box p { color: #e0e0e0; }
+		body.dark-mode #rand-num { background-color: #1e1e1e; border-color: rgba(255,255,255,0.2); color: #fff; }
+		body.dark-mode .spin-btn svg { fill: #fff; }
+
 		body.dark-mode .option-btn { background-color: #2c2c2c; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); }
-		
 		body.dark-mode .h-left .btn { background-color: #1e1e1e; color: #ffffff; border-color: rgba(255, 255, 255, 0.2); }
 		body.dark-mode .h-left .btn:active { background-color: #1a1a1a; }
 		
@@ -682,6 +741,11 @@
 			.popup-btn-cancel:hover { background-color: #d5d5d5; }
 			body.dark-mode .popup-btn-confirm:hover { background-color: #3498db; }
 			body.dark-mode .popup-btn-cancel:hover { background-color: #444; }
+			.spin-btn:hover { opacity: 1; }
+		}
+
+		@media (min-width: 851px) {
+			.spin-btn { display: flex; }
 		}
 
 		@media (max-width: 850px) {
@@ -689,6 +753,8 @@
 			.h-center { flex-basis: 100%; order: 3; margin-top: 10px; display: flex; justify-content: center; }
 			.h-left { order: 1; }
 			.h-right { order: 2; }
+			.spin-btn { display: none; }
+			#rand-num { padding-right: 10px !important; } 
 		}
 
 		@media (max-width: 600px) {
@@ -780,15 +846,27 @@
 				<button class="btn-main btn-mod btn-mod-2" onclick="startQuiz('mod2')">MOD 2</button>
 				<button class="btn-main btn-mod btn-mod-3" onclick="startQuiz('mod3')">MOD 3</button>
 			</div>
-			
+
 			<div class="rand-box">
 				<p>Quante domande casuali vuoi?</p>
 				<div class="rand-controls">
-					<input type="number" id="rand-num" value="20" min="1">
+					
+					<!-- WRAPPER SPECIFICO PER INPUT+FRECCE -->
+					<div class="input-wrapper">
+						<input type="number" id="rand-num" min="1" value="20">
+						
+						<button class="spin-btn spin-up" onclick="document.getElementById('rand-num').stepUp()" type="button" aria-label="Aumenta">
+							<svg viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
+						</button>
+						<button class="spin-btn spin-down" onclick="document.getElementById('rand-num').stepDown()" type="button" aria-label="Diminuisci">
+							<svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+						</button>
+					</div>
+
 					<button class="btn-rand" onclick="startQuiz('rand')">🎲 Inizia Casuali</button>
 				</div>
 			</div>
-			
+
 			<button class="btn-exam" onclick="startQuiz('exam')">⏱️ Modalità Esame</button>
 			<button class="btn-ceci" onclick="toggleCeciSelectionBox()">🧮 Modalità Cecilia</button>
 
