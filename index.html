@@ -693,7 +693,10 @@
 		dialog#customAlert {
 			padding: 25px; border-radius: 16px; border: 1px solid #e0e0e0; max-width: 420px;
 			width: 85%; text-align: center; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-			background-color: #ffffff; color: #2c3e50; font-family: inherit; z-index: 2500;
+			background-color: rgba(255, 255, 255, 0.85); color: #2c3e50; font-family: inherit;
+			z-index: 2500;
+			backdrop-filter: blur(12px);
+			-webkit-backdrop-filter: blur(12px);
 		}
 		dialog#customAlert p { margin: 0 0 20px 0; line-height: 1.5; font-size: 1.05rem; font-weight: 500; white-space: pre-wrap; }
 		#customAlertButtons { display: flex; gap: 12px; justify-content: center; }
@@ -710,8 +713,10 @@
 		@keyframes popIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
 
 		body.dark-mode dialog#customAlert {
-			background-color: #1e1e1e !important; color: #ffffff !important;
+			background-color: rgba(30, 30, 30, 0.85) !important; color: #ffffff !important;
 			border-color: #333333 !important; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+			backdrop-filter: blur(12px) !important;
+			-webkit-backdrop-filter: blur(12px) !important;
 		}
 		body.dark-mode .popup-btn-cancel { background-color: #333; color: #fff; }
 		body.dark-mode dialog#customAlert::backdrop { background: rgba(0, 0, 0, 0.45); }
