@@ -1687,8 +1687,6 @@
 
 		function updateScrollIndex(mode) {
 			const bar = document.getElementById('scroll-index');
-			
-			// Lista delle modalità in cui vogliamo vedere l'indice
 			const modalitaConIndice = ['all', 'mod1', 'mod2', 'mod3'];
 
 			if (modalitaConIndice.includes(mode)) {
@@ -1701,22 +1699,30 @@
 				const dotsCount = 6; 
 				
 				for (let i = 0; i < dotsCount; i++) {
-					let percentage = i / (dotsCount - 1);
-					let questionNum = Math.round(percentage * (total - 1)) + 1;
+					// Calcola l'indice nell'array corrente
+					let arrayIndex = Math.round((i / (dotsCount - 1)) * (total - 1));
+					
+					let realQuestionNum = activeQuestions[arrayIndex].originalIndex + 1; 
 
 					const dot = document.createElement('div');
 					dot.className = 'index-dot';
-					dot.innerText = questionNum;
-					dot.title = "Vai alla domanda " + questionNum;
-					
+					dot.innerText = realQuestionNum; // Mostra all'utente: 60, 174, ecc.
+					dot.title = "Vai alla domanda " + realQuestionNum;
+
 					dot.onclick = function() {
-						jumpTo(questionNum);
+						// 1. Trova l'indice nell'array ATTIVO (quello a schermo)
+						let domIndex = activeQuestions.findIndex(q => q.originalIndex + 1 === realQuestionNum);
+						// 2. Se non c'è nel filtro, cerca nel DB globale
+						if (domIndex === -1) {
+							domIndex = allQuestions.findIndex(q => q.originalIndex + 1 === realQuestionNum);
+						}
+						// 3. Passa a jumpTo il NUMERO DOMANDA (+1), come fa già tutto il resto del codice
+						jumpTo(domIndex + 1); 
 					};
 					
 					bar.appendChild(dot);
 				}
 			} else {
-				// Per Esame, Ceci, Errori, Rand: nascondi tutto
 				bar.classList.add('hidden-index');
 			}
 		}
